@@ -1,0 +1,24 @@
+# LangChain and dependencies
+langchain==0.3.13
+langchain-community==0.3.13
+langchain-core==0.3.27
+langchain-openai==0.2.10
+langgraph==0.2.60
+
+# Playwright integration
+playwright==1.48.0
+lxml==5.3.0
+beautifulsoup4==4.12.3
+
+# OpenRouter client
+httpx==0.28.1
+pydantic==2.10.4
+python-dotenv==1.0.1
+
+# Logging and utilities
+colorlog==6.9.0
+rich==13.9.4
+
+# Async support
+asyncio==3.4.3
+aiofiles==24.1.0

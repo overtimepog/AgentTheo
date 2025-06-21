@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+.venv
+pip-log.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+.roo/
+.windsurfrules
+
+# Logs
+logs/
+*.log
+
+# Documentation
+docs/
+*.md
+LICENSE
+
+# Tests
+tests/
+pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.env.*
+config/.env
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Misc
+.DS_Store
+.taskmaster/
+examples/
+# Keep docker-entrypoint.sh - needed for build
+run*.sh
+quick_setup.sh

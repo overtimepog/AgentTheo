@@ -1,0 +1,28 @@
+services:
+  browser-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: browser-agent:latest
+    container_name: browser-agent
+    env_file:
+      - ../config/.env
+    environment:
+      - TASK_DESCRIPTION=${TASK_DESCRIPTION}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - BROWSER=${BROWSER:-chromium}
+      - DISPLAY=:1
+    volumes:
+      - ../logs:/app/logs
+      - ../config:/app/config:ro
+    init: true
+    ipc: host
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_ADMIN
+    stdin_open: true
+    tty: true
+    ports:
+      - "5901:5901"  # VNC port
+      - "6080:6080"  # noVNC web interface
