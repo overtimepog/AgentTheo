@@ -1,8 +1,8 @@
-# BrowserBase Enhancement Implementation Guide
+# AgentTheo Enhancement Implementation Guide
 
 ## Quick Start
 
-This guide provides step-by-step instructions for implementing the BrowserBase enhancements outlined in the Browser Enhancement Plan.
+This guide provides step-by-step instructions for implementing the AgentTheo enhancements outlined in the Browser Enhancement Plan.
 
 ## Prerequisites
 

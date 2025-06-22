@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to fix container environment issues
 
-echo "Fixing BrowserBase container environment issues..."
+echo "Fixing AgentTheo container environment issues..."
 
 # 1. Ensure the .env file has the correct model
 if [ -f "config/.env" ]; then

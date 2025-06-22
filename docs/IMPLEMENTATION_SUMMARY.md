@@ -43,7 +43,7 @@ Implemented a comprehensive suite of custom tools extending Playwright's capabil
 ## Project Structure
 
 ```
-BrowserBase/
+AgentTheo/
 ├── agent/                      # Core agent implementation
 │   ├── main.py                # Main BrowserAgent class
 │   ├── browser_tools.py       # Playwright browser setup

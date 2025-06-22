@@ -1,8 +1,8 @@
-# Browser Agent - Desktop Mode with Advanced Stealth
+# AgentTheo
 
 A containerized browser automation agent using Playwright, LangGraph, and OpenRouter API that executes tasks through natural language commands with a visible GUI and advanced anti-detection features.
 
-> **Note**: This browser agent runs exclusively in desktop mode with VNC/noVNC access for visual debugging and monitoring.
+> **Note**: AgentTheo runs exclusively in desktop mode with VNC/noVNC access for visual debugging and monitoring.
 
 ## Features
 
@@ -13,7 +13,7 @@ A containerized browser automation agent using Playwright, LangGraph, and OpenRo
 - 🧠 LLM-powered decision making via OpenRouter
 - 🎯 Playwright browser automation
 - 🖥️ Always-on desktop mode with GUI visibility
-- 🥷 **NEW: Advanced stealth features to avoid CAPTCHA and bot detection**
+- 🥷 Advanced stealth features to avoid CAPTCHA and bot detection
 
 ## Prerequisites
 
@@ -26,8 +26,8 @@ A containerized browser automation agent using Playwright, LangGraph, and OpenRo
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/browser-agent.git
-cd browser-agent
+git clone https://github.com/yourusername/AgentTheo.git
+cd AgentTheo
 
 # Set up environment variables
 cp config/.env.template config/.env
@@ -145,7 +145,7 @@ Key environment variables in `config/.env`:
 ### Project Structure
 
 ```
-browser-agent/
+AgentTheo/
 ├── agent/           # Core agent implementation
 │   ├── core/        # Main agent logic
 │   ├── stealth/     # Anti-detection features

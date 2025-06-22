@@ -2,7 +2,7 @@
 
 ## Function Calling Support
 
-The BrowserBase agent requires an LLM model that supports **function calling** (also known as tool use) to properly execute browser automation tasks.
+The AgentTheo agent requires an LLM model that supports **function calling** (also known as tool use) to properly execute browser automation tasks.
 
 ## Recommended Models
 

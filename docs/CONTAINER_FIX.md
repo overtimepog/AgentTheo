@@ -2,7 +2,7 @@
 
 ## Problem Description
 
-The BrowserBase agent was returning early with "Task completed successfully. The agent performed all requested actions." in the container environment, even though it hadn't actually executed the requested tasks.
+The AgentTheo agent was returning early with "Task completed successfully. The agent performed all requested actions." in the container environment, even though it hadn't actually executed the requested tasks.
 
 ## Root Cause
 
