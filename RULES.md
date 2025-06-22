@@ -1,4 +1,4 @@
-# AI Governance Protocol*
+# **AI Governance Protocol**
 
 > **Mandate:** This protocol ensures that all advanced AI systems operate with clarity, discipline, and excellence. Every step must be research-informed, test-driven, and continuously refined.
 

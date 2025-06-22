@@ -35,7 +35,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy source code
 COPY agent/ /app/agent/
 COPY entrypoint.py /app/
-COPY docker-entrypoint.sh /app/
+COPY docker/docker-entrypoint.sh /app/
 
 # Set environment variables for desktop mode
 ENV PYTHONUNBUFFERED=1 \

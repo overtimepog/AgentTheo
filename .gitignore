@@ -56,3 +56,17 @@ node_modules/
 *.sln
 *.sw?
 # OS specific
+
+# Task files
+# tasks.json
+# tasks/
+*.claude
+*.clinerules
+*.cursor
+*.trae
+*.windsurf
+*.roo
+*.github
+CLAUDE.md
+AGENTS.md
+.roomodes

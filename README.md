@@ -15,7 +15,14 @@ A containerized browser automation agent using Playwright, LangGraph, and OpenRo
 - 🖥️ Always-on desktop mode with GUI visibility
 - 🥷 **NEW: Advanced stealth features to avoid CAPTCHA and bot detection**
 
+## Prerequisites
+
+- **Docker Desktop** installed and running ([Download Docker](https://www.docker.com/products/docker-desktop/))
+- **OpenRouter API key** (get one at https://openrouter.ai)
+
 ## Quick Start
+
+### 1. Initial Setup
 
 ```bash
 # Clone the repository
@@ -24,40 +31,80 @@ cd browser-agent
 
 # Set up environment variables
 cp config/.env.template config/.env
-# Edit config/.env with your OpenRouter API key
-
-# Run a task
-./run.sh task "go to google and search for AI news"
-
-# Access the browser GUI
-# Open http://localhost:6080/vnc.html in your browser
+# Edit config/.env and add your OpenRouter API key
 ```
 
-## Prerequisites
+### 2. First Time Setup
 
-- Docker installed and running
-- OpenRouter API key (get one at https://openrouter.ai)
-
-## Usage
-
-The agent accepts natural language commands to perform browser automation tasks:
+Before running your first task, build the Docker container:
 
 ```bash
-./run.sh task "navigate to amazon and find the price of headphones"
-./run.sh task "fill out the contact form on example.com"
-./run.sh task "extract all product listings from the search results"
+# Build the container (required on first run)
+./run.sh restart
 ```
 
-### Accessing the Browser GUI
+This command:
+- Builds the Docker image with all dependencies
+- Installs Playwright browsers
+- Sets up the desktop environment
+- Prepares the automation framework
 
-When you run a task, the browser runs with a full desktop environment:
+### 3. Run Your First Task
+
+```bash
+# Run a browser automation task
+./run.sh task "go to google and search for AI news"
+```
+
+### 4. Access the Browser GUI
+
+Once the task is running, you can watch it in real-time:
 
 - **Web Interface**: Open http://localhost:6080/vnc.html in your browser
 - **VNC Client**: Connect to vnc://localhost:5901 (no password)
 
+## Usage
+
+### Running Tasks
+
+The agent accepts natural language commands through the `run.sh` script:
+
+```bash
+# Basic syntax
+./run.sh task "<your natural language command>"
+
+# Examples
+./run.sh task "navigate to amazon and find the price of headphones"
+./run.sh task "fill out the contact form on example.com"
+./run.sh task "extract all product listings from the search results"
+./run.sh task "find the latest news about artificial intelligence"
+```
+
+### Command Reference
+
+```bash
+# Run a browser automation task
+./run.sh task "<command>"
+
+# Rebuild the container (after code changes or updates)
+./run.sh restart
+
+# View help
+./run.sh
+```
+
+### Monitoring Your Task
+
+When you run a task, the browser runs with a full desktop environment:
+
+1. **Watch in Browser**: Open http://localhost:6080/vnc.html
+2. **Connect via VNC**: Use any VNC client to connect to `localhost:5901`
+3. **View Logs**: `docker logs -f browser-agent`
+4. **Stop Task**: `docker stop browser-agent`
+
 This allows you to:
 - Watch the automation in real-time
-- Debug selector issues visually
+- Debug selector issues visually  
 - Intervene if needed
 - Record demos of your automation
 
@@ -72,13 +119,21 @@ This allows you to:
 
 ## Development
 
-### Rebuilding the Container
+### Container Management
 
 ```bash
+# Rebuild after code changes
 ./run.sh restart
-```
 
-This rebuilds the Docker image with any code changes.
+# Stop running container
+docker stop browser-agent
+
+# Remove container
+docker rm browser-agent
+
+# View container logs
+docker logs -f browser-agent
+```
 
 ### Environment Variables
 
@@ -132,19 +187,41 @@ python examples/stealth_demo.py
 
 ## Troubleshooting
 
-### Can't connect to VNC/noVNC
+### Docker Issues
+- **"Docker daemon is not running"**: Start Docker Desktop
+- **"Cannot connect to Docker daemon"**: Ensure Docker Desktop is running
+- **First run fails**: Always run `./run.sh restart` before your first task
+
+### Can't Connect to Browser GUI
 - Ensure Docker is running
 - Check ports 5901 and 6080 are not in use
-- Try restarting the container: `docker stop browser-agent && ./run.sh task "..."`
+- Try restarting: `docker stop browser-agent && ./run.sh restart`
+- Verify container is running: `docker ps`
 
-### Browser crashes
-- Increase Docker memory allocation
+### Browser Crashes
+- Increase Docker memory allocation in Docker Desktop settings
 - Check logs: `docker logs browser-agent`
+- Rebuild container: `./run.sh restart`
 
-### Task fails
-- Check your OpenRouter API key is set correctly
-- Ensure the website is accessible
-- Review logs for specific errors
+### Task Fails
+- Verify OpenRouter API key is set in `config/.env`
+- Check if the LLM model supports function calling
+- Ensure the target website is accessible
+- Review logs for specific errors: `docker logs browser-agent`
+
+### Common Fixes
+```bash
+# Full reset and rebuild
+docker stop browser-agent
+docker rm browser-agent
+./run.sh restart
+
+# Check what's running
+docker ps -a
+
+# Clean up old images
+docker image prune
+```
 
 ## License
 
