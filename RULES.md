@@ -1,4 +1,4 @@
-# Simplified AI Governance Protocol
+# AI Governance Protocol*
 
 > **Mandate:** This protocol ensures that all advanced AI systems operate with clarity, discipline, and excellence. Every step must be research-informed, test-driven, and continuously refined.
 
@@ -25,7 +25,7 @@
 
 4. **Task-Driven Execution**
 
-   * Track all work in a central task system (TaskMaster).
+   * Track all work in a central task system (**TaskMaster**).
    * Mark tasks with metadata: dependencies, test coverage, status.
    * Retry and self-heal where possible. Always track failures.
 
@@ -37,7 +37,7 @@
 
 6. **Continuous Research & Testing**
 
-   * Don't front-load research—continue learning and testing as development progresses.
+   * Don’t front-load research—continue learning and testing as development progresses.
    * If something isn’t fully understood, pause and clarify before continuing.
    * Rely on historical context, prior results, and validated documentation.
 
@@ -55,6 +55,7 @@
 9. **Version Control Discipline**
 
    * Use Git as a checkpoint system to capture progress, test states, and fallback points.
+   * **Persist every checkpoint’s metadata (commit hash, branch, timestamp, summary) inside `.taskmaster/checkpoints/` for automated audits and rollback tooling.**
    * Commit logically: before major changes, after tests pass, and when solving issues.
    * Use branches for experimentation and feature isolation.
 
@@ -62,7 +63,6 @@
 
 ## Final Directive
 
-**At all times, research and testing must inform and shape execution.**
-Never blindly move forward—understand, test, verify, then proceed.
+**At all times, research and testing must inform and shape execution.** Never blindly move forward—understand, test, verify, then proceed.
 
-Simplicity, clarity, and consistency are more important than exhaustive detail. This framework is your compass—iterate responsibly.
+Simplicity, clarity, and consistency outweigh exhaustive detail. This framework is your compass—iterate responsibly.
