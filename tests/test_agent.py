@@ -8,9 +8,9 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent.main import BrowserAgent
-from agent.browser_tools import get_browser_toolkit
-from agent.llm_client import get_llm
+from agent.core.main import BrowserAgent
+from agent.tools.browser_tools import get_browser_toolkit
+from agent.llm.client import get_llm
 
 async def test_browser_creation():
     """Test browser creation"""
@@ -28,7 +28,8 @@ async def test_llm_client():
         llm = get_llm()
         assert llm is not None
         print("✓ LLM client created successfully")
-    except ValueError as e:        print(f"✗ LLM client error: {e}")
+    except ValueError as e:
+        print(f"✗ LLM client error: {e}")
         print("  Make sure OPENROUTER_API_KEY is set in config/.env")
 
 async def test_agent_initialization():

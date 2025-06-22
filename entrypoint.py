@@ -7,9 +7,8 @@ Main entry point for the containerized browser automation agent
 import os
 import sys
 import asyncio
-import logging
-from agent.main import BrowserAgent
-from agent.logger import setup_logging
+from agent.core.main import BrowserAgent
+from agent.utils.logger import setup_logging
 
 async def main():
     """Main async function"""

@@ -1,6 +1,6 @@
-# Browser Agent - Desktop Mode
+# Browser Agent - Desktop Mode with Advanced Stealth
 
-A containerized browser automation agent using Playwright, LangGraph, and OpenRouter API that executes tasks through natural language commands with a visible GUI.
+A containerized browser automation agent using Playwright, LangGraph, and OpenRouter API that executes tasks through natural language commands with a visible GUI and advanced anti-detection features.
 
 > **Note**: This browser agent runs exclusively in desktop mode with VNC/noVNC access for visual debugging and monitoring.
 
@@ -13,6 +13,7 @@ A containerized browser automation agent using Playwright, LangGraph, and OpenRo
 - 🧠 LLM-powered decision making via OpenRouter
 - 🎯 Playwright browser automation
 - 🖥️ Always-on desktop mode with GUI visibility
+- 🥷 **NEW: Advanced stealth features to avoid CAPTCHA and bot detection**
 
 ## Quick Start
 
@@ -91,11 +92,42 @@ Key environment variables in `config/.env`:
 ```
 browser-agent/
 ├── agent/           # Core agent implementation
+│   ├── core/        # Main agent logic
+│   ├── stealth/     # Anti-detection features
+│   ├── tools/       # Browser automation tools
+│   └── utils/       # Utilities and logging
 ├── config/          # Configuration files
 ├── docker/          # Docker configuration
-├── docs/           # Documentation
-├── logs/           # Application logs
+├── docs/            # Documentation
+├── examples/        # Example scripts
+├── logs/            # Application logs
+├── tests/           # Test suite
 └── run.sh          # Main entry point
+```
+
+## Stealth Features
+
+The browser agent includes advanced stealth capabilities to avoid detection:
+
+- **WebDriver Detection**: Removes `navigator.webdriver` property
+- **Chrome Runtime**: Emulates genuine Chrome browser objects
+- **WebGL Spoofing**: Randomizes graphics hardware information
+- **Plugin Emulation**: Simulates common browser plugins
+- **Fingerprint Randomization**: Varies browser fingerprints
+- **Human-like Behavior**: Adds natural delays and interactions
+
+For more details, see [docs/STEALTH_IMPLEMENTATION.md](docs/STEALTH_IMPLEMENTATION.md)
+
+### Testing Stealth
+
+Run the stealth test suite:
+```bash
+python tests/test_stealth.py
+```
+
+Try the stealth demo:
+```bash
+python examples/stealth_demo.py
 ```
 
 ## Troubleshooting

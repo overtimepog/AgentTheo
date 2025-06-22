@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Load environment
 load_dotenv('config/.env')
 
-from agent.main import BrowserAgent
+from agent.core.main import BrowserAgent
 
 # Example tasks demonstrating different custom tools
 EXAMPLE_TASKS = {
