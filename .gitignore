@@ -57,9 +57,6 @@ node_modules/
 *.sw?
 # OS specific
 
-# Task files
-# tasks.json
-# tasks/
 *.claude
 *.clinerules
 *.cursor
@@ -69,4 +66,9 @@ node_modules/
 *.github
 CLAUDE.md
 AGENTS.md
+.roomodes
+
+# Task files
+# tasks.json
+# tasks/ 
 .roomodes
