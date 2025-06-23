@@ -5,7 +5,7 @@ Each evasion targets specific detection methods
 
 from typing import Dict, Callable, Any
 from playwright.async_api import Page
-from ..utils.logger import get_logger
+from ...utils.logger import get_logger
 
 logger = get_logger('stealth.evasions')
 

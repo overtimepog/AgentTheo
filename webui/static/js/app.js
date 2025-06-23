@@ -24,6 +24,19 @@ class AgentTheoUI {
             refreshBtn: document.getElementById('refreshBtn')
         };
         
+        // Initialize modules
+        this.markdownRenderer = new MarkdownRenderer();
+        this.streamHandler = new StreamHandler({
+            onMessage: this.handleStreamMessage.bind(this),
+            onError: this.handleStreamError.bind(this),
+            onComplete: this.handleStreamComplete.bind(this),
+            onStart: this.handleStreamStart.bind(this)
+        });
+        this.resizablePanels = null;
+        
+        // Message management
+        this.currentStreamMessageId = null;
+        
         this.init();
     }
     
@@ -36,6 +49,15 @@ class AgentTheoUI {
         
         // Setup VNC frame
         this.setupVNC();
+        
+        // Initialize resizable panels
+        this.resizablePanels = new ResizablePanels({
+            container: document.querySelector('.container'),
+            leftPanel: document.querySelector('.vnc-panel'),
+            rightPanel: document.querySelector('.chat-panel'),
+            minLeftWidth: 400,
+            minRightWidth: 400
+        });
     }
     
     setupEventListeners() {
@@ -174,11 +196,20 @@ class AgentTheoUI {
         // Add user message to chat
         this.addMessage(message, 'user');
         
-        // Send to server
-        this.ws.send(JSON.stringify({
-            command: message,
-            timestamp: new Date().toISOString()
-        }));
+        // Check if streaming is enabled (we'll add a setting for this)
+        const useStreaming = true; // Default to streaming
+        
+        if (useStreaming) {
+            // Start streaming response
+            const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            this.streamHandler.startStream(message, messageId);
+        } else {
+            // Send via WebSocket (traditional method)
+            this.ws.send(JSON.stringify({
+                command: message,
+                timestamp: new Date().toISOString()
+            }));
+        }
         
         // Clear input
         this.elements.messageInput.value = '';
@@ -188,9 +219,14 @@ class AgentTheoUI {
         this.updateAgentStatus('Sending command...');
     }
     
-    addMessage(text, type) {
+    addMessage(text, type, messageId = null) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${type}`;
+        
+        if (messageId) {
+            messageDiv.id = messageId;
+            messageDiv.setAttribute('data-message-id', messageId);
+        }
         
         // Add timestamp for non-system messages
         if (type !== 'system') {
@@ -201,13 +237,29 @@ class AgentTheoUI {
             messageDiv.appendChild(timeSpan);
         }
         
-        // Add message text
-        const textSpan = document.createElement('span');
-        textSpan.textContent = text;
-        messageDiv.appendChild(textSpan);
+        // Add message content
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        // Render markdown for agent messages
+        if (type === 'agent' && this.markdownRenderer) {
+            // Format agent response first
+            const formatted = this.markdownRenderer.formatAgentResponse(text);
+            contentDiv.innerHTML = this.markdownRenderer.render(formatted);
+            
+            // Setup copy handlers for code blocks
+            this.markdownRenderer.setupCopyHandlers(contentDiv);
+        } else {
+            // Plain text for other message types
+            contentDiv.textContent = text;
+        }
+        
+        messageDiv.appendChild(contentDiv);
         
         this.elements.chatMessages.appendChild(messageDiv);
         this.scrollToBottom();
+        
+        return messageDiv;
     }
     
     clearChat() {
@@ -280,6 +332,77 @@ class AgentTheoUI {
         } else {
             document.exitFullscreen();
         }
+    }
+    
+    // Stream handler callbacks
+    handleStreamStart(messageId) {
+        // Create a new streaming message
+        const messageDiv = this.streamHandler.createStreamMessage('', messageId);
+        this.elements.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+        
+        this.currentStreamMessageId = messageId;
+        this.isProcessing = true;
+        this.elements.stopBtn.style.display = 'inline-block';
+        this.updateAgentStatus('Processing...');
+    }
+    
+    handleStreamMessage(data) {
+        if (data.type === 'append' && data.messageId) {
+            // Update the streaming message
+            const messageEl = document.getElementById(data.messageId);
+            if (messageEl) {
+                const contentEl = messageEl.querySelector('.message-content');
+                if (contentEl) {
+                    // Append new content
+                    const currentHtml = contentEl.innerHTML;
+                    const newContent = this.markdownRenderer.renderInline(data.content);
+                    contentEl.innerHTML = currentHtml + newContent;
+                    
+                    this.scrollToBottom();
+                }
+            }
+        } else if (data.type === 'status') {
+            // Update status without affecting the message
+            this.updateAgentStatus(data.content);
+        }
+    }
+    
+    handleStreamError(error) {
+        console.error('Stream error:', error);
+        
+        if (error.messageId) {
+            this.streamHandler.finalizeStreamMessage(error.messageId);
+        }
+        
+        this.addMessage(error.message || 'Stream error occurred', 'error');
+        this.isProcessing = false;
+        this.elements.stopBtn.style.display = 'none';
+        this.updateAgentStatus('Error occurred');
+    }
+    
+    handleStreamComplete(data) {
+        if (data.messageId) {
+            // Finalize the message
+            this.streamHandler.finalizeStreamMessage(data.messageId);
+            
+            // Re-render the complete message with full markdown
+            const messageEl = document.getElementById(data.messageId);
+            if (messageEl && data.finalContent) {
+                const contentEl = messageEl.querySelector('.message-content');
+                if (contentEl) {
+                    const formatted = this.markdownRenderer.formatAgentResponse(data.finalContent);
+                    contentEl.innerHTML = this.markdownRenderer.render(formatted);
+                    this.markdownRenderer.setupCopyHandlers(contentEl);
+                }
+            }
+        }
+        
+        this.currentStreamMessageId = null;
+        this.isProcessing = false;
+        this.elements.stopBtn.style.display = 'none';
+        this.updateAgentStatus('Ready');
+        this.scrollToBottom();
     }
 }
 

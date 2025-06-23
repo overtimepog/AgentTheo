@@ -132,7 +132,7 @@ services:
     volumes:
       - redis_data:/data
     
-  browser-agent:
+  agenttheo:
     # ... existing configuration ...
     depends_on:
       - redis

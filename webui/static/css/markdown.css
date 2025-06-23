@@ -1,0 +1,305 @@
+/* Markdown Styling for AgentTheo Web UI */
+
+/* Base markdown styles */
+.message.agent {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+}
+
+.message.agent h1,
+.message.agent h2,
+.message.agent h3,
+.message.agent h4,
+.message.agent h5,
+.message.agent h6 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.message.agent h1 { font-size: 1.5em; }
+.message.agent h2 { font-size: 1.3em; }
+.message.agent h3 { font-size: 1.1em; }
+.message.agent h4 { font-size: 1em; }
+.message.agent h5 { font-size: 0.9em; }
+.message.agent h6 { font-size: 0.85em; }
+
+.message.agent p {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.message.agent ul,
+.message.agent ol {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+}
+
+.message.agent li {
+    margin-bottom: 0.25rem;
+}
+
+.message.agent hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 1rem 0;
+}
+
+/* Code styling */
+.message.agent code {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 0.125rem 0.25rem;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.875em;
+}
+
+.message.agent pre {
+    margin: 0;
+    overflow-x: auto;
+}
+
+.message.agent pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Code block wrapper */
+.code-block-wrapper {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.code-block-lang {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.code-block-copy {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.code-block-copy:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.code-block-copy.copied {
+    color: var(--accent-green);
+}
+
+.code-block-wrapper pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+}
+
+/* Syntax highlighting (compatible with highlight.js themes) */
+.hljs-keyword { color: #ff79c6; }
+.hljs-string { color: #f1fa8c; }
+.hljs-number { color: #bd93f9; }
+.hljs-function { color: #50fa7b; }
+.hljs-comment { color: #6272a4; }
+.hljs-variable { color: #f8f8f2; }
+.hljs-type { color: #8be9fd; }
+.hljs-class { color: #50fa7b; }
+.hljs-attr { color: #50fa7b; }
+.hljs-regexp { color: #f1fa8c; }
+.hljs-symbol { color: #f8f8f2; }
+.hljs-built_in { color: #8be9fd; }
+.hljs-title { color: #50fa7b; }
+.hljs-params { color: #f8f8f2; }
+.hljs-meta { color: #ff79c6; }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: bold; }
+
+/* Tables */
+.markdown-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+}
+
+.markdown-table th,
+.markdown-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.markdown-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 600;
+}
+
+.markdown-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Blockquotes */
+.markdown-blockquote {
+    border-left: 4px solid var(--accent-blue);
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Links */
+.message.agent a {
+    color: var(--accent-blue);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.message.agent a:hover {
+    border-bottom-color: var(--accent-blue);
+}
+
+/* Collapsible sections */
+.markdown-collapsible {
+    margin: 0.5rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.markdown-collapsible-title {
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-tertiary);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.markdown-collapsible-title:hover {
+    background-color: var(--bg-secondary);
+}
+
+.markdown-collapsible-title::before {
+    content: '▶';
+    font-size: 0.75em;
+    transition: transform 0.2s;
+}
+
+.markdown-collapsible[open] .markdown-collapsible-title::before {
+    transform: rotate(90deg);
+}
+
+.markdown-collapsible-content {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Special message types */
+.message.agent strong {
+    font-weight: 600;
+}
+
+/* Error formatting */
+.message.agent strong:has-text("❌") {
+    color: var(--accent-red);
+}
+
+/* Warning formatting */
+.message.agent strong:has-text("⚠️") {
+    color: var(--accent-yellow);
+}
+
+/* Success formatting */
+.message.agent strong:has-text("✅") {
+    color: var(--accent-green);
+}
+
+/* Note formatting */
+.message.agent strong:has-text("📝") {
+    color: var(--accent-blue);
+}
+
+/* Lists with better spacing */
+.message.agent ul li::marker {
+    color: var(--text-secondary);
+}
+
+.message.agent ol li::marker {
+    color: var(--text-secondary);
+}
+
+/* Nested lists */
+.message.agent ul ul,
+.message.agent ol ol,
+.message.agent ul ol,
+.message.agent ol ul {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Horizontal scrollbar for code blocks */
+.code-block-wrapper pre::-webkit-scrollbar {
+    height: 6px;
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Images */
+.message.agent img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}
+
+/* Task/Step indicators */
+.message.agent h3:has-text("Task:"),
+.message.agent h3:has-text("Step:"),
+.message.agent h3:has-text("Action:") {
+    color: var(--accent-blue);
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}

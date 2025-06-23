@@ -19,7 +19,7 @@ def setup_logging():
     log_file = os.environ.get('LOG_FILE', None)
     
     # Create logger
-    logger = logging.getLogger('browser-agent')
+    logger = logging.getLogger('agenttheo')
     logger.setLevel(getattr(logging, log_level))
     
     # Clear existing handlers
@@ -59,5 +59,5 @@ def setup_logging():
 def get_logger(name=None):
     """Get a logger instance"""
     if name:
-        return logging.getLogger(f'browser-agent.{name}')
-    return logging.getLogger('browser-agent')
+        return logging.getLogger(f'agenttheo.{name}')
+    return logging.getLogger('agenttheo')

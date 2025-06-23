@@ -8,7 +8,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent.tools.browser_tools import get_browser_toolkit
+from agent.browser.tools.browser_tools import get_browser_toolkit
 from agent.stealth import apply_stealth, StealthConfig
 
 

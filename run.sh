@@ -33,11 +33,19 @@ usage() {
     echo -e "${BLUE}AgentTheo - Browser Automation with Web UI${NC}"
     echo ""
     echo "Usage:"
-    echo "  $0 start      - Start AgentTheo with Web UI"
-    echo "  $0 stop       - Stop AgentTheo"
-    echo "  $0 restart    - Restart AgentTheo (rebuild if needed)"
-    echo "  $0 logs       - View AgentTheo logs"
-    echo "  $0 status     - Check AgentTheo status"
+    echo "  $0 start               - Start AgentTheo with Web UI"
+    echo "  $0 stop                - Stop AgentTheo"
+    echo "  $0 restart             - Restart AgentTheo (rebuild if needed)"
+    echo "  $0 restart -dev        - Quick restart (only rebuild app code)"
+    echo "  $0 restart -hot        - Hot reload mode (instant code updates)"
+    echo "  $0 restart --rebuild   - Force complete rebuild"
+    echo "  $0 logs                - View AgentTheo logs"
+    echo "  $0 status              - Check AgentTheo status"
+    echo ""
+    echo "Development flags:"
+    echo "  -dev, --dev     - Fast rebuild, only updates application code"
+    echo "  -hot, --hot     - Hot reload with volume mounts (no rebuild needed)"
+    echo "  --rebuild       - Force complete rebuild with no cache"
     echo ""
     echo "Once started, access the Web UI at:"
     echo "  ${GREEN}http://localhost:8000${NC}"
@@ -47,7 +55,7 @@ usage() {
 
 # Function to check container status
 check_status() {
-    if docker ps --format '{{.Names}}' | grep -q '^browser-agent$'; then
+    if docker ps --format '{{.Names}}' | grep -q '^agenttheo$'; then
         echo -e "${GREEN}AgentTheo is running${NC}"
         echo ""
         echo "Access points:"
@@ -64,7 +72,7 @@ check_status() {
 # Function to start container
 start_container() {
     # Check if already running
-    if docker ps --format '{{.Names}}' | grep -q '^browser-agent$'; then
+    if docker ps --format '{{.Names}}' | grep -q '^agenttheo$'; then
         echo -e "${YELLOW}AgentTheo is already running${NC}"
         check_status
         exit 0
@@ -80,8 +88,9 @@ start_container() {
     fi
     
     # Check if image exists
-    if [[ "$(docker images -q browser-agent:latest 2> /dev/null)" == "" ]]; then
+    if [[ "$(docker images -q agenttheo:latest 2> /dev/null)" == "" ]]; then
         echo -e "${GREEN}Building Docker image for first time...${NC}"
+        echo -e "${BLUE}Using optimized multi-stage build${NC}"
         docker-compose -f docker/docker-compose.yml build
     fi
     
@@ -95,7 +104,7 @@ start_container() {
     sleep 5
     
     # Check if container is running
-    if docker ps --format '{{.Names}}' | grep -q '^browser-agent$'; then
+    if docker ps --format '{{.Names}}' | grep -q '^agenttheo$'; then
         echo ""
         echo -e "${GREEN}AgentTheo started successfully!${NC}"
         echo ""
@@ -112,7 +121,7 @@ start_container() {
         echo "  Check status: $0 status"
     else
         echo -e "${RED}Failed to start AgentTheo${NC}"
-        echo "Check logs with: docker logs browser-agent"
+        echo "Check logs with: docker logs agenttheo"
         exit 1
     fi
 }
@@ -120,7 +129,9 @@ start_container() {
 # Function to stop container
 stop_container() {
     echo -e "${YELLOW}Stopping AgentTheo...${NC}"
-    docker-compose -f docker/docker-compose.yml down
+    # Try both compose files to ensure we stop any running instance
+    docker-compose -f docker/docker-compose.yml down 2>/dev/null || true
+    docker-compose -f docker/docker-compose.dev.yml down 2>/dev/null || true
     echo -e "${GREEN}AgentTheo stopped${NC}"
 }
 
@@ -131,18 +142,72 @@ restart_container() {
     # Stop existing containers
     stop_container
     
-    # Check if rebuild is requested or if code has changed
-    if [ "$2" == "--rebuild" ] || [ ! -z "$(git status --porcelain 2>/dev/null)" ]; then
+    # Check flags
+    if [ "$2" == "-dev" ] || [ "$2" == "--dev" ]; then
+        echo -e "${GREEN}Dev mode: Quick rebuild of application code only...${NC}"
+        echo -e "${BLUE}This skips dependency updates for faster testing${NC}"
+        
+        # Create a temporary Dockerfile for dev builds
+        cat > docker/Dockerfile.dev <<EOF
+# Dev-only Dockerfile that reuses existing layers
+FROM agenttheo:latest
+
+# Only copy application code
+COPY --chown=agent:agent agent/ /app/agent/
+COPY --chown=agent:agent entrypoint.py /app/
+COPY --chown=agent:agent webui/ /app/webui/
+
+# Ensure permissions are correct
+RUN chmod +x /app/docker-entrypoint.sh
+EOF
+        
+        # Build using dev Dockerfile
+        docker build -t agenttheo:latest -f docker/Dockerfile.dev .
+        
+        # Clean up temp file
+        rm docker/Dockerfile.dev
+        
+    elif [ "$2" == "-hot" ] || [ "$2" == "--hot" ]; then
+        echo -e "${GREEN}Hot reload mode: Using volume mounts for instant code updates${NC}"
+        echo -e "${BLUE}Code changes will be reflected immediately without rebuild${NC}"
+        echo -e "${YELLOW}Note: Dependency changes still require full rebuild${NC}"
+        
+        # Use development docker-compose with volume mounts
+        docker-compose -f docker/docker-compose.dev.yml up -d
+        
+        # Skip the normal start_container function
+        echo ""
+        echo -e "${GREEN}AgentTheo started in hot reload mode!${NC}"
+        echo ""
+        echo -e "${BLUE}Access the Web UI at:${NC}"
+        echo -e "  ${GREEN}http://localhost:8000${NC}"
+        echo ""
+        echo "Other access points:"
+        echo "  - VNC Viewer: http://localhost:6080/vnc.html"
+        echo "  - VNC Direct: vnc://localhost:5901"
+        echo ""
+        echo -e "${YELLOW}Commands:${NC}"
+        echo "  View logs: $0 logs"
+        echo "  Stop: $0 stop"
+        echo "  Check status: $0 status"
+        return
+        
+    elif [ "$2" == "--rebuild" ] || [ ! -z "$(git status --porcelain 2>/dev/null)" ]; then
         echo -e "${GREEN}Rebuilding Docker image with latest changes...${NC}"
         
         # Remove the existing image to force complete rebuild
-        if [[ "$(docker images -q browser-agent:latest 2> /dev/null)" != "" ]]; then
+        if [[ "$(docker images -q agenttheo:latest 2> /dev/null)" != "" ]]; then
             echo -e "${GREEN}Removing existing image...${NC}"
-            docker rmi browser-agent:latest
+            docker rmi agenttheo:latest
         fi
         
         # Build with no cache
+        echo -e "${BLUE}Using optimized multi-stage build${NC}"
         docker-compose -f docker/docker-compose.yml build --no-cache
+    else
+        # Regular restart - rebuild if needed with cache
+        echo -e "${BLUE}Using optimized multi-stage build${NC}"
+        docker-compose -f docker/docker-compose.yml build
     fi
     
     # Start container
@@ -151,7 +216,7 @@ restart_container() {
 
 # Function to view logs
 view_logs() {
-    if ! docker ps --format '{{.Names}}' | grep -q '^browser-agent$'; then
+    if ! docker ps --format '{{.Names}}' | grep -q '^agenttheo$'; then
         echo -e "${YELLOW}AgentTheo is not running${NC}"
         exit 1
     fi
@@ -159,7 +224,7 @@ view_logs() {
     echo -e "${GREEN}Viewing AgentTheo logs...${NC}"
     echo -e "${YELLOW}Press Ctrl+C to exit${NC}"
     echo ""
-    docker logs -f browser-agent
+    docker logs -f agenttheo
 }
 
 # Check arguments

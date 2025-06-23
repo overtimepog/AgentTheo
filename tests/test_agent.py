@@ -8,8 +8,8 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent.core.main import BrowserAgent
-from agent.tools.browser_tools import get_browser_toolkit
+from agent.browser.agent import BrowserAgent
+from agent.browser.tools.browser_tools import get_browser_toolkit
 from agent.llm.client import get_llm
 
 async def test_browser_creation():

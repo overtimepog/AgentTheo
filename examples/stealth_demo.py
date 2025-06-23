@@ -9,7 +9,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent.core.main import BrowserAgent
+from agent.browser.agent import BrowserAgent
 
 
 async def search_google_with_stealth():

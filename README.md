@@ -105,14 +105,15 @@ When you run a task, the browser runs with a full desktop environment:
    - See real-time responses
 2. **Direct VNC Access**: Open http://localhost:6080/vnc.html
 3. **Connect via VNC**: Use any VNC client to connect to `localhost:5901`
-4. **View Logs**: `docker logs -f browser-agent`
-5. **Stop Task**: `docker stop browser-agent`
+4. **View Logs**: `docker logs -f agenttheo`
+5. **Stop Task**: `docker stop agenttheo`
 
 This allows you to:
 - Watch the automation in real-time
 - Debug selector issues visually  
-- Intervene if needed
 - Record demos of your automation
+
+**Note**: VNC is configured in view-only mode to prevent interference with browser automation. All interactions should be done through the Web UI chat interface.
 
 ### Web UI Features
 
@@ -127,7 +128,7 @@ The new web interface (http://localhost:8000) provides:
 
 - **Docker Container**: Isolated environment with desktop components
 - **Virtual Display**: Xvfb provides the display for the browser
-- **VNC Server**: x11vnc shares the desktop
+- **VNC Server**: x11vnc shares the desktop (view-only mode)
 - **Web Access**: noVNC provides browser-based access
 - **LangGraph Agent**: Graph-based agent orchestration
 - **Playwright Toolkit**: Handles browser automation
@@ -141,13 +142,13 @@ The new web interface (http://localhost:8000) provides:
 ./run.sh restart
 
 # Stop running container
-docker stop browser-agent
+docker stop agenttheo
 
 # Remove container
-docker rm browser-agent
+docker rm agenttheo
 
 # View container logs
-docker logs -f browser-agent
+docker logs -f agenttheo
 ```
 
 ### Environment Variables

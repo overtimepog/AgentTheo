@@ -46,8 +46,8 @@ class OpenRouterLLM(LLM):
         """Call OpenRouter API"""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": "https://github.com/browser-agent",
-            "X-Title": "Browser Agent"
+            "HTTP-Referer": "https://github.com/overtimepog/AgentTheo",
+            "X-Title": "AgentTheo"
         }
         
         data = {

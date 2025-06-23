@@ -1,21 +1,52 @@
-# Use Node.js 20 with Debian Bookworm as base
-FROM node:20-bookworm
+# syntax=docker/dockerfile:1.4
+# Multi-stage optimized Dockerfile for AgentTheo with Playwright
 
-# Prevent interactive prompts
+# Stage 1: Builder stage for dependencies
+FROM node:20-bookworm as builder
+
 ENV DEBIAN_FRONTEND=noninteractive
-
-# Set working directory
 WORKDIR /app
 
-# Install required packages, Python, pip, Playwright deps, and desktop environment
-RUN apt-get update && apt-get install -y \
+# Install build dependencies and Python
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create Python virtual environment
+RUN python3 -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Install Playwright and browsers (will be copied to final stage)
+# Set the browsers path explicitly
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npx -y playwright@1.48.0 install --with-deps chromium firefox webkit
+
+# Stage 2: Runtime stage with minimal footprint
+FROM node:20-bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /app
+
+# Create user early for better layer caching
+RUN groupadd -r agent && useradd -r -g agent -m agent && \
+    mkdir -p /var/log/supervisor && \
+    chown -R agent:agent /var/log/supervisor
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-venv \
     # Desktop environment components
     xvfb x11vnc fluxbox \
     novnc websockify \
     # Process manager
     supervisor \
-    # Additional browser dependencies for GUI
+    # Browser runtime dependencies (minimal set)
     libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdbus-1-3 \
     libdrm2 libxkbcommon0 libatspi2.0-0 libx11-6 libxcomposite1 libxdamage1 \
     libxext6 libxfixes3 libxrandr2 libgbm1 libxcb1 libxss1 libgtk-3-0 \
@@ -23,50 +54,31 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright and all required browsers (done once as root to cache)
-RUN npx -y playwright@1.48.0 install --with-deps chromium firefox webkit
-
-# Create Python virtual environment and activate it
-RUN python3 -m venv /app/venv
+# Copy Python virtual environment from builder
+COPY --from=builder --chown=agent:agent /app/venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
-# Pre-install Python dependencies separately to cache layer unless they change
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Copy Playwright installation from builder
+COPY --from=builder /ms-playwright /ms-playwright
 
-# Copy source code
-COPY agent/ /app/agent/
-COPY entrypoint.py /app/
-COPY webui/ /app/webui/
-COPY docker/docker-entrypoint.sh /app/
+# Copy application files
+COPY --chown=agent:agent agent/ /app/agent/
+COPY --chown=agent:agent entrypoint.py /app/
+COPY --chown=agent:agent webui/ /app/webui/
+COPY --chown=agent:agent docker/docker-entrypoint.sh /app/
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Set environment variables for desktop mode
+# Set executable permissions
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     PYTHONPATH=/app:$PYTHONPATH \
-    DISPLAY=:1 \
-    DEBIAN_FRONTEND=noninteractive
-
-# Create log directory for supervisor
-RUN mkdir -p /var/log/supervisor
-
-# Create and switch to non-root user
-RUN groupadd -r agent && useradd -r -g agent agent \
-    && chown -R agent:agent /app \
-    && chmod +x /app/docker-entrypoint.sh \
-    && chown -R agent:agent /var/log/supervisor
-
-USER agent
-
-# Install Playwright browser as non-root
-RUN python -m playwright install chromium
+    DISPLAY=:1
 
 # Expose VNC and noVNC ports
 EXPOSE 5901 6080
-
-# Switch back to root for supervisor
-USER root
 
 # Use supervisor as the main process
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

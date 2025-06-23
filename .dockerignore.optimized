@@ -1,0 +1,98 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+pip-log.txt
+*.egg
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+.hypothesis/
+
+# IDE and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+.roo/
+.claude/
+.clinerules/
+.windsurf/
+.windsurfrules
+*.sublime-*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentation
+docs/
+*.md
+!README.md
+LICENSE
+AGENTS.md
+CLAUDE.md
+RULES.md
+TODO.md
+
+# Tests
+tests/
+test/
+*.test.js
+*.spec.js
+
+# Environment
+.env
+.env.*
+config/.env
+!.env.example
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore*
+!docker/docker-entrypoint.sh
+!docker/supervisord.conf
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+
+# Project specific
+.taskmaster/
+examples/
+utility-scripts/
+scripts/
+run*.sh
+quick_setup.sh
+
+# Node (if applicable)
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.~*

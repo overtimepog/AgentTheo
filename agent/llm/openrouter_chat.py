@@ -30,8 +30,8 @@ class OpenRouterChat(ChatOpenAI):
         # Add OpenRouter specific headers
         kwargs['model_kwargs'] = kwargs.get('model_kwargs', {})
         kwargs['default_headers'] = {
-            "HTTP-Referer": "https://github.com/browser-agent",
-            "X-Title": "Browser Agent"
+            "HTTP-Referer": "https://github.com/overtimepog/AgentTheo",
+            "X-Title": "AgentTheo"
         }
         
         super().__init__(**kwargs)

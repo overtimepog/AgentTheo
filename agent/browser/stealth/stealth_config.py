@@ -5,7 +5,7 @@ Main stealth configuration and application
 import random
 from typing import Optional, Dict, Any, List
 from playwright.async_api import Page, BrowserContext, Browser
-from ..utils.logger import get_logger
+from ...utils.logger import get_logger
 from .evasions import EVASIONS
 
 logger = get_logger('stealth')

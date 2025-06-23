@@ -21,8 +21,8 @@ import json
 import base64
 import os
 from datetime import datetime
-from ..utils.logger import get_logger
-from ..stealth import apply_stealth, StealthConfig
+from agent.utils.logger import get_logger
+from agent.browser.stealth import apply_stealth, StealthConfig
 
 logger = get_logger('browser_tools')
 

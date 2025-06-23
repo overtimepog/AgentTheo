@@ -2,14 +2,14 @@
 Enhanced browser tools with CAPTCHA detection
 """
 
+import json
 from typing import Optional, Any
 from langchain.callbacks.manager import CallbackManagerForToolRun
 from langchain_community.tools.playwright import NavigateTool as BaseNavigateTool
 from pydantic import BaseModel, Field
 from playwright.async_api import Page
-
-from ..stealth.captcha_handler import CaptchaDetector
-from ..utils.logger import get_logger
+from agent.browser.stealth.captcha_handler import CaptchaDetector
+from ...utils.logger import get_logger
 
 logger = get_logger('enhanced_browser_tools')
 

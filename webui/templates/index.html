@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgentTheo - Browser Automation Agent</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/markdown.css">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
 </head>
 <body>
     <div class="container">
@@ -49,6 +56,16 @@
             
             <div id="chatMessages" class="chat-messages"></div>
             
+            <!-- Agent Status Indicator -->
+            <div id="agentStatusIndicator" class="agent-status-indicator">
+                <span class="status-icon">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </span>
+                <span class="status-text"></span>
+            </div>
+            
             <div class="chat-input-container">
                 <div class="input-actions">
                     <button id="clearBtn" class="action-btn" title="Clear chat">Clear</button>
@@ -72,6 +89,10 @@
         </div>
     </div>
 
-    <script src="/static/js/app.js"></script>
+    <!-- Custom Scripts -->
+    <script src="/static/js/resizable-panels.js?v=1.0"></script>
+    <script src="/static/js/markdown-renderer.js?v=1.0"></script>
+    <script src="/static/js/stream-handler.js?v=1.2"></script>
+    <script src="/static/js/app.js?v=1.1"></script>
 </body>
 </html>

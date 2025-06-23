@@ -3,6 +3,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
     image: agenttheo:latest
     container_name: agenttheo
     env_file:
@@ -14,6 +16,10 @@ services:
     volumes:
       - ../logs:/app/logs
       - ../config:/app/config:ro
+      # Development volumes - mount source code for hot reload
+      - ../agent:/app/agent:ro
+      - ../webui:/app/webui:ro
+      - ../entrypoint.py:/app/entrypoint.py:ro
     init: true
     ipc: host
     security_opt:
