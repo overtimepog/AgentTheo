@@ -1,285 +1,240 @@
-# AgentTheo
+# 🤖 AgentTheo
 
-A containerized browser automation agent using Playwright, LangGraph, and OpenRouter API that executes tasks through natural language commands with a visible GUI and advanced anti-detection features.
+<div align="center">
 
-> **Note**: AgentTheo runs exclusively in desktop mode with VNC/noVNC access for visual debugging and monitoring.
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## Features
+**The AI-powered browser automation agent that thinks and acts like a human**
 
-- 🤖 Natural language task execution
-- 🌐 Multi-browser support (Chromium, Firefox, WebKit)
-- 📊 Real-time visual feedback via VNC/noVNC
-- 💬 **NEW: Web UI with integrated VNC viewer and chat interface**
-- 🔧 Docker containerized environment
-- 🧠 LLM-powered decision making via OpenRouter
-- 🎯 Playwright browser automation
-- 🖥️ Always-on desktop mode with GUI visibility
-- 🥷 Advanced stealth features to avoid CAPTCHA and bot detection
+[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Demo](#demo) • [Contributing](#contributing)
 
-## Prerequisites
+</div>
 
-- **Docker Desktop** installed and running ([Download Docker](https://www.docker.com/products/docker-desktop/))
-- **OpenRouter API key** (get one at https://openrouter.ai)
+---
 
-## Quick Start
+## 🎯 What is AgentTheo?
 
-### 1. Initial Setup
+AgentTheo is an autonomous AI agent that can browse the web, interact with websites, and complete complex tasks through natural language commands. Built on cutting-edge stealth technology and powered by LLMs, it operates like a human user while providing developers with powerful automation capabilities.
+
+### 🌟 Key Features
+
+- **🧠 Natural Language Control** - Just tell it what to do: *"Find the best deals on noise-cancelling headphones"*
+- **👻 Advanced Stealth Mode** - Bypasses bot detection with human-like behavior patterns
+- **🖥️ Visual Debugging** - Watch it work in real-time through integrated VNC viewer
+- **🔄 Multi-Browser Support** - Works with Chromium, Firefox, and WebKit
+- **🚀 Web UI Interface** - Modern chat interface with live browser view
+- **🐳 Fully Containerized** - One command to run, no complex setup
+- **⚡ Hot Reload Development** - Instant code updates without rebuilding
+
+## 🎬 Demo
+
+<div align="center">
+  <img src="docs/assets/demo.gif" alt="AgentTheo Demo" width="800">
+  <p><i>AgentTheo navigating e-commerce sites and comparing prices autonomously</i></p>
+</div>
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- [OpenRouter API key](https://openrouter.ai) for LLM access
+
+### Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/AgentTheo.git
 cd AgentTheo
 
-# Set up environment variables
+# Set up your API key
 cp config/.env.template config/.env
-# Edit config/.env and add your OpenRouter API key
-```
+# Edit config/.env and add your OPENROUTER_API_KEY
 
-### 2. Start AgentTheo
-
-```bash
-# Start AgentTheo with Web UI
-./run.sh start
-```
-
-This will:
-- Build the Docker image (first time only)
-- Start all services (VNC, Web UI, Agent)
-- Make the Web UI available at http://localhost:8000
-
-### 3. Access the Web UI
-
-Open your browser and navigate to:
-- **http://localhost:8000**
-
-The Web UI provides:
-- Live VNC view of the browser on the left
-- Chat interface on the right to send commands
-- Real-time responses from the agent
-
-## Usage
-
-### Managing AgentTheo with run.sh
-
-The `run.sh` script is the main entry point for managing AgentTheo. It provides comprehensive commands for development and production use:
-
-```bash
 # Start AgentTheo
 ./run.sh start
-
-# Stop AgentTheo
-./run.sh stop
-
-# Restart AgentTheo (auto-detects if rebuild needed)
-./run.sh restart
-
-# Check status
-./run.sh status
-
-# View logs (real-time)
-./run.sh logs
 ```
 
-### Development Commands
+### 🎮 Using AgentTheo
+
+1. Open your browser to **http://localhost:8000**
+2. Type your command in the chat interface
+3. Watch AgentTheo work its magic!
+
+#### Example Commands
+
+```
+"Search for the latest AI news and summarize the top 3 stories"
+"Go to LinkedIn and find job postings for Python developers in San Francisco"
+"Compare prices for MacBook Pro on Amazon, Best Buy, and Apple Store"
+"Fill out the contact form on example.com with test data"
+```
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    A[Web UI] -->|WebSocket/SSE| B[FastAPI Server]
+    B --> C[Main Orchestrator]
+    C --> D[Browser Agent]
+    D --> E[Playwright + Stealth]
+    E --> F[Browser Instance]
+    G[VNC Server] --> F
+    A --> G
+```
+
+### Core Components
+
+- **🎯 Orchestrator** - Intelligent task routing and agent coordination
+- **🌐 Browser Agent** - Handles all web interactions with stealth capabilities
+- **💬 Web UI** - Real-time streaming interface with integrated VNC
+- **🛡️ Stealth System** - Advanced anti-detection and human emulation
+
+## 🛠️ Development
+
+### Development Modes
 
 ```bash
-# Quick restart - only rebuilds application code (fastest)
+# Standard mode - auto-detects changes
+./run.sh restart
+
+# Dev mode - quick rebuilds
 ./run.sh restart -dev
-# or
-./run.sh restart --dev
 
-# Hot reload mode - instant code updates without rebuild
+# Hot reload - instant updates
 ./run.sh restart -hot
-# or
-./run.sh restart --hot
 
-# Force complete rebuild (no cache)
+# Force rebuild - clean slate
 ./run.sh restart --rebuild
 ```
-
-### Development Modes Explained
-
-1. **Standard Mode** (`./run.sh restart`)
-   - Automatically detects if code changed
-   - Rebuilds image if needed
-   - Uses Docker cache for faster builds
-
-2. **Dev Mode** (`./run.sh restart -dev`)
-   - Quick rebuild of application code only
-   - Skips dependency updates
-   - Reuses existing base layers
-   - Best for rapid testing of code changes
-
-3. **Hot Reload Mode** (`./run.sh restart -hot`)
-   - Uses volume mounts for instant updates
-   - No rebuild needed for code changes
-   - Changes reflected immediately
-   - Perfect for active development
-   - Note: Dependency changes still require full rebuild
-
-4. **Force Rebuild** (`./run.sh restart --rebuild`)
-   - Complete rebuild with no cache
-   - Ensures clean state
-   - Use when dependencies change
-
-### Using the Web UI
-
-1. Start AgentTheo: `./run.sh start`
-2. Open http://localhost:8000 in your browser
-3. Type commands in the chat interface
-4. Watch the browser execute your commands in real-time
-
-Example commands you can send through the chat:
-- "Go to google and search for OpenAI news"
-- "Navigate to amazon and find the price of headphones"
-- "Fill out the contact form on example.com"
-- "Find the latest news about artificial intelligence from multiple sources"
-- "Extract all product listings from the search results"
-
-### Monitoring Your Task
-
-When you run a task, the browser runs with a full desktop environment:
-
-1. **Use the Web UI (Recommended)**: Open http://localhost:8000
-   - Integrated VNC viewer and chat interface
-   - Send commands directly to the agent
-   - See real-time responses
-2. **Direct VNC Access**: Open http://localhost:6080/vnc.html
-3. **Connect via VNC**: Use any VNC client to connect to `localhost:5901`
-4. **View Logs**: `docker logs -f agenttheo`
-5. **Stop Task**: `docker stop agenttheo`
-
-This allows you to:
-- Watch the automation in real-time
-- Debug selector issues visually  
-- Record demos of your automation
-
-**Note**: VNC is configured in view-only mode to prevent interference with browser automation. All interactions should be done through the Web UI chat interface.
-
-### Web UI Features
-
-The new web interface (http://localhost:8000) provides:
-- **Split View**: VNC display on the left, chat interface on the right
-- **Real-time Chat**: Send commands and receive responses from the agent
-- **WebSocket Communication**: Instant bidirectional communication
-- **Status Indicators**: Connection status and agent availability
-- **Responsive Design**: Works on different screen sizes
-
-## Architecture
-
-- **Docker Container**: Isolated environment with desktop components
-- **Virtual Display**: Xvfb provides the display for the browser
-- **VNC Server**: x11vnc shares the desktop (view-only mode)
-- **Web Access**: noVNC provides browser-based access
-- **LangGraph Agent**: Graph-based agent orchestration
-- **Playwright Toolkit**: Handles browser automation
-
-## Development
-
-### Container Management
-
-```bash
-# Rebuild after code changes
-./run.sh restart
-
-# Stop running container
-docker stop agenttheo
-
-# Remove container
-docker rm agenttheo
-
-# View container logs
-docker logs -f agenttheo
-```
-
-### Environment Variables
-
-Key environment variables in `config/.env`:
-- `OPENROUTER_API_KEY`: Your OpenRouter API key
-- `BROWSER`: Browser choice (chromium/firefox/webkit)
-- `LOG_LEVEL`: Logging verbosity (INFO/DEBUG/WARNING)
 
 ### Project Structure
 
 ```
 AgentTheo/
-├── agent/           # Core agent implementation
-│   ├── core/        # Main agent logic
-│   ├── stealth/     # Anti-detection features
-│   ├── tools/       # Browser automation tools
-│   └── utils/       # Utilities and logging
-├── config/          # Configuration files
-├── docker/          # Docker configuration
-├── docs/            # Documentation
-├── examples/        # Example scripts
-├── logs/            # Application logs
-├── tests/           # Test suite
-└── run.sh          # Main entry point
+├── agent/               # Core agent logic
+│   ├── browser/        # Browser automation & stealth
+│   ├── core/           # Orchestrator
+│   └── llm/            # LLM integration
+├── webui/              # Web interface
+├── docker/             # Container configs
+└── tests/              # Test suite
 ```
 
-## Stealth Features
+### Running Tests
 
-The browser agent includes advanced stealth capabilities to avoid detection:
-
-- **WebDriver Detection**: Removes `navigator.webdriver` property
-- **Chrome Runtime**: Emulates genuine Chrome browser objects
-- **WebGL Spoofing**: Randomizes graphics hardware information
-- **Plugin Emulation**: Simulates common browser plugins
-- **Fingerprint Randomization**: Varies browser fingerprints
-- **Human-like Behavior**: Adds natural delays and interactions
-
-For more details, see [docs/STEALTH_IMPLEMENTATION.md](docs/STEALTH_IMPLEMENTATION.md)
-
-### Testing Stealth
-
-Run the stealth test suite:
 ```bash
-python tests/test_stealth.py
+# All tests
+./run.sh test
+
+# Stealth features
+python -m pytest tests/test_stealth.py -v
+
+# Browser automation
+python -m pytest tests/test_browser_agent.py -v
 ```
 
-Try the stealth demo:
+## 🥷 Stealth Technology
+
+AgentTheo employs cutting-edge techniques to avoid bot detection:
+
+- **WebDriver Masking** - Hides automation indicators
+- **Fingerprint Randomization** - Unique browser signatures
+- **Human Behavior Emulation** - Natural mouse movements and delays
+- **Canvas/WebGL Spoofing** - Prevents tracking via graphics
+- **Network Pattern Mimicry** - Realistic request patterns
+
+[Learn more about our stealth implementation →](docs/STEALTH_IMPLEMENTATION.md)
+
+## 📚 Documentation
+
+- [Complete Documentation](docs/)
+- [API Reference](docs/API.md)
+- [Architecture Guide](docs/ARCHITECTURE.md)
+- [Stealth Features](docs/STEALTH_IMPLEMENTATION.md)
+- [Contributing Guide](CONTRIBUTING.md)
+
+## 🤝 Contributing
+
+We welcome contributions! Whether it's bug fixes, new features, or documentation improvements.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## 🐛 Troubleshooting
+
+<details>
+<summary>Docker won't start</summary>
+
 ```bash
-python examples/stealth_demo.py
+# Ensure Docker Desktop is running
+# Check system requirements
+# Try: docker system prune -a
 ```
+</details>
 
-## Troubleshooting
+<details>
+<summary>Can't connect to Web UI</summary>
 
-### Docker Issues
-- **"Docker daemon is not running"**: Start Docker Desktop
-- **"Cannot connect to Docker daemon"**: Ensure Docker Desktop is running
-- **First run fails**: Always run `./run.sh restart` before your first task
-
-### Can't Connect to Browser GUI
-- Ensure Docker is running
-- Check ports 5901 and 6080 are not in use
-- Try restarting: `docker stop browser-agent && ./run.sh restart`
-- Verify container is running: `docker ps`
-
-### Browser Crashes
-- Increase Docker memory allocation in Docker Desktop settings
-- Check logs: `docker logs browser-agent`
-- Rebuild container: `./run.sh restart`
-
-### Task Fails
-- Verify OpenRouter API key is set in `config/.env`
-- Check if the LLM model supports function calling
-- Ensure the target website is accessible
-- Review logs for specific errors: `docker logs browser-agent`
-
-### Common Fixes
 ```bash
-# Full reset and rebuild
-docker stop browser-agent
-docker rm browser-agent
-./run.sh restart
+# Check if port 8000 is available
+lsof -i :8000
 
-# Check what's running
-docker ps -a
-
-# Clean up old images
-docker image prune
+# Restart with clean build
+./run.sh restart --rebuild
 ```
+</details>
 
-## License
+<details>
+<summary>Browser automation fails</summary>
 
-MIT License - see LICENSE file for details
+```bash
+# Check logs
+docker logs agenttheo
+
+# Verify API key
+cat config/.env | grep OPENROUTER_API_KEY
+
+# Test with simpler task
+```
+</details>
+
+## 🗺️ Roadmap
+
+- [ ] Multi-agent collaboration
+- [ ] Cloud deployment options
+- [ ] Browser extension interface
+- [ ] Mobile browser support
+- [ ] Custom action recording
+- [ ] API-first architecture
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Playwright](https://playwright.dev/) for browser automation
+- [LangGraph](https://python.langchain.com/docs/langgraph) for agent orchestration
+- [OpenRouter](https://openrouter.ai/) for LLM access
+- The open-source community for inspiration and tools
+
+---
+
+<div align="center">
+
+**Built with ❤️ by the AgentTheo Team**
+
+[Report Bug](https://github.com/yourusername/AgentTheo/issues) • [Request Feature](https://github.com/yourusername/AgentTheo/issues) • [Join Discord](https://discord.gg/agenttheo)
+
+</div>
