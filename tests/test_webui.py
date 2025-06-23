@@ -19,7 +19,7 @@ except ImportError:
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from webui import app, manager
+from webui.server import app, manager
 
 
 class TestWebUI:
@@ -83,7 +83,7 @@ async def test_websocket_connection():
 
 def test_connection_manager():
     """Test ConnectionManager functionality"""
-    from webui import ConnectionManager
+    from webui.server import ConnectionManager
     
     manager = ConnectionManager()
     assert manager.active_connections == []
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         print("Some tests will be skipped.")
         print("\nBasic import test:")
         try:
-            from webui import app, manager, ConnectionManager
+            from webui.server import app, manager, ConnectionManager
             print("✓ Web UI module imports successfully")
             print("✓ FastAPI app created")
             print("✓ ConnectionManager available")

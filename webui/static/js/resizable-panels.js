@@ -12,6 +12,8 @@ class ResizablePanels {
         this.isResizing = false;
         this.startX = 0;
         this.startLeftWidth = 0;
+        this.currentPointerId = null;
+        this.iframeOverlay = null;
         
         this.init();
     }
@@ -33,17 +35,19 @@ class ResizablePanels {
         
         // Apply initial styles
         this.applyStyles();
-    }
-    
+    }    
     setupEventListeners() {
-        // Mouse events
-        this.resizer.addEventListener('mousedown', this.onMouseDown.bind(this));
-        document.addEventListener('mousemove', this.onMouseMove.bind(this));
-        document.addEventListener('mouseup', this.onMouseUp.bind(this));
+        // Use pointer events for better iframe handling
+        this.resizer.addEventListener('pointerdown', this.onPointerDown.bind(this));
         
-        // Touch events for mobile
-        this.resizer.addEventListener('touchstart', this.onTouchStart.bind(this));
-        document.addEventListener('touchmove', this.onTouchMove.bind(this));
+        // Attach move and up events to document for better tracking
+        document.addEventListener('pointermove', this.onPointerMove.bind(this));
+        document.addEventListener('pointerup', this.onPointerUp.bind(this));
+        document.addEventListener('pointercancel', this.onPointerUp.bind(this));
+        
+        // Touch events for mobile compatibility
+        this.resizer.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
+        document.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
         document.addEventListener('touchend', this.onTouchEnd.bind(this));
         
         // Double click to reset
@@ -51,15 +55,53 @@ class ResizablePanels {
         
         // Window resize
         window.addEventListener('resize', this.onWindowResize.bind(this));
+        
+        // Prevent context menu on resizer
+        this.resizer.addEventListener('contextmenu', (e) => e.preventDefault());
     }
     
-    onMouseDown(e) {
+    onPointerDown(e) {
+        e.preventDefault();
+        
+        // Capture the pointer to receive all events even over iframes
+        this.resizer.setPointerCapture(e.pointerId);
+        this.currentPointerId = e.pointerId;
+        
         this.startResize(e.clientX);
     }
     
+    onPointerMove(e) {
+        if (!this.isResizing || e.pointerId !== this.currentPointerId) return;
+        e.preventDefault();
+        this.performResize(e.clientX);
+    }    
+    onPointerUp(e) {
+        if (!this.isResizing || e.pointerId !== this.currentPointerId) return;
+        
+        // Release the pointer capture
+        if (this.resizer.hasPointerCapture(e.pointerId)) {
+            this.resizer.releasePointerCapture(e.pointerId);
+        }
+        
+        this.currentPointerId = null;
+        this.endResize();
+    }
+    
     onTouchStart(e) {
+        e.preventDefault();
         const touch = e.touches[0];
         this.startResize(touch.clientX);
+    }
+    
+    onTouchMove(e) {
+        if (!this.isResizing) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        this.performResize(touch.clientX);
+    }
+    
+    onTouchEnd(e) {
+        this.endResize();
     }
     
     startResize(clientX) {
@@ -74,22 +116,12 @@ class ResizablePanels {
         // Prevent text selection
         document.body.style.userSelect = 'none';
         
-        // Show resize overlay
-        this.showResizeOverlay();
-    }
-    
-    onMouseMove(e) {
-        if (!this.isResizing) return;
-        this.performResize(e.clientX);
-    }
-    
-    onTouchMove(e) {
-        if (!this.isResizing) return;
-        const touch = e.touches[0];
-        this.performResize(touch.clientX);
-        e.preventDefault(); // Prevent scrolling
-    }
-    
+        // Create iframe overlay to prevent iframe from capturing events
+        this.createIframeOverlay();
+        
+        // Show resize indicator
+        this.showResizeIndicator();
+    }    
     performResize(clientX) {
         const containerWidth = this.container.offsetWidth;
         const deltaX = clientX - this.startX;
@@ -109,18 +141,10 @@ class ResizablePanels {
         this.leftPanel.style.flex = `0 0 ${leftPercent}%`;
         this.rightPanel.style.flex = `0 0 ${rightPercent}%`;
         
-        // Update overlay position
-        if (this.resizeOverlay) {
-            this.resizeOverlay.style.left = `${newLeftWidth}px`;
+        // Update resize indicator position
+        if (this.resizeIndicator) {
+            this.resizeIndicator.style.left = `${newLeftWidth}px`;
         }
-    }
-    
-    onMouseUp() {
-        this.endResize();
-    }
-    
-    onTouchEnd() {
-        this.endResize();
     }
     
     endResize() {
@@ -131,27 +155,64 @@ class ResizablePanels {
         this.container.classList.remove('resizing');
         document.body.style.userSelect = '';
         
-        // Hide resize overlay
-        this.hideResizeOverlay();
+        // Remove iframe overlay
+        this.removeIframeOverlay();
+        
+        // Hide resize indicator
+        this.hideResizeIndicator();
         
         // Save sizes
         this.saveSizes();
-    }
-    
-    showResizeOverlay() {
-        if (!this.resizeOverlay) {
-            this.resizeOverlay = document.createElement('div');
-            this.resizeOverlay.className = 'resize-overlay';
-            this.container.appendChild(this.resizeOverlay);
+    }    
+    showResizeIndicator() {
+        if (!this.resizeIndicator) {
+            this.resizeIndicator = document.createElement('div');
+            this.resizeIndicator.className = 'resize-indicator';
+            this.container.appendChild(this.resizeIndicator);
         }
         
-        this.resizeOverlay.style.display = 'block';
-        this.resizeOverlay.style.left = `${this.leftPanel.offsetWidth}px`;
+        this.resizeIndicator.style.display = 'block';
+        this.resizeIndicator.style.left = `${this.leftPanel.offsetWidth}px`;
     }
     
-    hideResizeOverlay() {
-        if (this.resizeOverlay) {
-            this.resizeOverlay.style.display = 'none';
+    hideResizeIndicator() {
+        if (this.resizeIndicator) {
+            this.resizeIndicator.style.display = 'none';
+        }
+    }
+    
+    createIframeOverlay() {
+        // Find all iframes in the container
+        const iframes = this.container.querySelectorAll('iframe');
+        
+        // Create overlay container if it doesn't exist
+        if (!this.iframeOverlay) {
+            this.iframeOverlay = document.createElement('div');
+            this.iframeOverlay.className = 'iframe-resize-overlay';
+        }
+        
+        // Position the overlay over each iframe
+        iframes.forEach(iframe => {
+            const rect = iframe.getBoundingClientRect();
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.left = rect.left + 'px';
+            overlay.style.top = rect.top + 'px';
+            overlay.style.width = rect.width + 'px';
+            overlay.style.height = rect.height + 'px';
+            overlay.style.zIndex = '9999';
+            overlay.style.background = 'transparent';
+            overlay.style.cursor = 'col-resize';
+            this.iframeOverlay.appendChild(overlay);
+        });
+        
+        document.body.appendChild(this.iframeOverlay);
+    }
+    
+    removeIframeOverlay() {
+        if (this.iframeOverlay && this.iframeOverlay.parentNode) {
+            this.iframeOverlay.parentNode.removeChild(this.iframeOverlay);
+            this.iframeOverlay.innerHTML = ''; // Clear child overlays
         }
     }
     
@@ -180,8 +241,7 @@ class ResizablePanels {
         };
         
         localStorage.setItem(this.storageKey, JSON.stringify(sizes));
-    }
-    
+    }    
     loadSavedSizes() {
         try {
             const saved = localStorage.getItem(this.storageKey);
@@ -205,8 +265,7 @@ class ResizablePanels {
         if (leftWidth < this.minLeftWidth || rightWidth < this.minRightWidth) {
             this.resetSizes();
         }
-    }
-    
+    }    
     applyStyles() {
         // Add necessary styles dynamically
         if (!document.getElementById('resizable-panels-styles')) {
@@ -220,6 +279,7 @@ class ResizablePanels {
                     position: relative;
                     transition: background-color 0.2s;
                     flex-shrink: 0;
+                    touch-action: none; /* Prevent default touch behavior */
                 }
                 
                 .panel-resizer:hover {
@@ -245,7 +305,7 @@ class ResizablePanels {
                     background: var(--accent-blue);
                 }
                 
-                .resize-overlay {
+                .resize-indicator {
                     position: absolute;
                     top: 0;
                     bottom: 0;
@@ -254,14 +314,14 @@ class ResizablePanels {
                     display: none;
                     z-index: 1000;
                     box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
-                }
-                
+                }                
                 body.resizing {
                     cursor: col-resize !important;
                 }
                 
                 body.resizing * {
                     cursor: col-resize !important;
+                    user-select: none !important;
                 }
                 
                 .panel-resizer.reset-animation {
@@ -281,6 +341,13 @@ class ResizablePanels {
                 
                 .chat-panel {
                     min-width: 300px;
+                }
+                
+                /* Iframe overlay during resize */
+                .iframe-resize-overlay {
+                    position: fixed;
+                    pointer-events: all;
+                    z-index: 9999;
                 }
             `;
             document.head.appendChild(style);
@@ -304,14 +371,23 @@ class ResizablePanels {
                 break;
         }
         this.saveSizes();
-    }
-    
+    }    
     destroy() {
-        // Remove event listeners and elements
+        // Remove event listeners
+        this.resizer.removeEventListener('pointerdown', this.onPointerDown.bind(this));
+        document.removeEventListener('pointermove', this.onPointerMove.bind(this));
+        document.removeEventListener('pointerup', this.onPointerUp.bind(this));
+        document.removeEventListener('pointercancel', this.onPointerUp.bind(this));
+        
+        // Remove elements
         this.resizer.remove();
-        if (this.resizeOverlay) {
-            this.resizeOverlay.remove();
+        if (this.resizeIndicator) {
+            this.resizeIndicator.remove();
         }
+        if (this.iframeOverlay) {
+            this.removeIframeOverlay();
+        }
+        
         // Remove styles
         const styles = document.getElementById('resizable-panels-styles');
         if (styles) {

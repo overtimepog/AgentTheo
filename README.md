@@ -59,7 +59,9 @@ The Web UI provides:
 
 ## Usage
 
-### Managing AgentTheo
+### Managing AgentTheo with run.sh
+
+The `run.sh` script is the main entry point for managing AgentTheo. It provides comprehensive commands for development and production use:
 
 ```bash
 # Start AgentTheo
@@ -68,18 +70,57 @@ The Web UI provides:
 # Stop AgentTheo
 ./run.sh stop
 
-# Restart AgentTheo
+# Restart AgentTheo (auto-detects if rebuild needed)
 ./run.sh restart
-
-# Restart with rebuild
-./run.sh restart --rebuild
-
-# View logs
-./run.sh logs
 
 # Check status
 ./run.sh status
+
+# View logs (real-time)
+./run.sh logs
 ```
+
+### Development Commands
+
+```bash
+# Quick restart - only rebuilds application code (fastest)
+./run.sh restart -dev
+# or
+./run.sh restart --dev
+
+# Hot reload mode - instant code updates without rebuild
+./run.sh restart -hot
+# or
+./run.sh restart --hot
+
+# Force complete rebuild (no cache)
+./run.sh restart --rebuild
+```
+
+### Development Modes Explained
+
+1. **Standard Mode** (`./run.sh restart`)
+   - Automatically detects if code changed
+   - Rebuilds image if needed
+   - Uses Docker cache for faster builds
+
+2. **Dev Mode** (`./run.sh restart -dev`)
+   - Quick rebuild of application code only
+   - Skips dependency updates
+   - Reuses existing base layers
+   - Best for rapid testing of code changes
+
+3. **Hot Reload Mode** (`./run.sh restart -hot`)
+   - Uses volume mounts for instant updates
+   - No rebuild needed for code changes
+   - Changes reflected immediately
+   - Perfect for active development
+   - Note: Dependency changes still require full rebuild
+
+4. **Force Rebuild** (`./run.sh restart --rebuild`)
+   - Complete rebuild with no cache
+   - Ensures clean state
+   - Use when dependencies change
 
 ### Using the Web UI
 
