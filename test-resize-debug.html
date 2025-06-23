@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resize Debug Test</title>
+    <style>
+        :root {
+            --border-color: #374151;
+            --accent-blue: #2563eb;
+            --accent-green: #10b981;
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0a0b0d;
+            color: #e5e7eb;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .vnc-panel, .chat-panel {
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            flex: 0 0 50%;
+        }
+        .vnc-panel {
+            background: #111827;
+            min-width: 300px;
+        }
+        .chat-panel {
+            background: #0f172a;
+            min-width: 300px;
+        }
+        .panel h2 {
+            margin: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: calc(100% - 60px);
+            border: none;
+            background: white;
+        }
+        #log {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="vnc-panel">
+            <h2>Panel with iframe</h2>
+            <iframe src="data:text/html,<h1>Iframe Content</h1><p>Mouse events should not be captured here during resize</p>"></iframe>
+        </div>
+        <div class="chat-panel">
+            <h2>Chat Panel</h2>
+            <p style="margin: 20px;">Drag the border to resize. Check console for debug logs.</p>
+        </div>
+    </div>
+    <div id="log"></div>
+
+    <script src="webui/static/js/resizable-panels.js"></script>
+    <script>
+        // Debug logging
+        const log = document.getElementById('log');
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog(...args);
+            const entry = document.createElement('div');
+            entry.textContent = new Date().toLocaleTimeString() + ': ' + args.join(' ');
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        };
+
+        // Initialize
+        const resizable = new ResizablePanels();
+        console.log('ResizablePanels initialized');
+    </script>
+</body>
+</html>

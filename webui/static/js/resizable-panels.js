@@ -63,25 +63,19 @@ class ResizablePanels {
     onPointerDown(e) {
         e.preventDefault();
         
-        // Capture the pointer to receive all events even over iframes
-        this.resizer.setPointerCapture(e.pointerId);
+        // Don't use pointer capture since we're using document-level events
         this.currentPointerId = e.pointerId;
         
         this.startResize(e.clientX);
     }
     
     onPointerMove(e) {
-        if (!this.isResizing || e.pointerId !== this.currentPointerId) return;
+        if (!this.isResizing) return;
         e.preventDefault();
         this.performResize(e.clientX);
     }    
     onPointerUp(e) {
-        if (!this.isResizing || e.pointerId !== this.currentPointerId) return;
-        
-        // Release the pointer capture
-        if (this.resizer.hasPointerCapture(e.pointerId)) {
-            this.resizer.releasePointerCapture(e.pointerId);
-        }
+        if (!this.isResizing) return;
         
         this.currentPointerId = null;
         this.endResize();
@@ -182,29 +176,21 @@ class ResizablePanels {
     }
     
     createIframeOverlay() {
-        // Find all iframes in the container
-        const iframes = this.container.querySelectorAll('iframe');
-        
-        // Create overlay container if it doesn't exist
+        // Create a single overlay that covers the entire viewport
         if (!this.iframeOverlay) {
             this.iframeOverlay = document.createElement('div');
             this.iframeOverlay.className = 'iframe-resize-overlay';
+            this.iframeOverlay.style.position = 'fixed';
+            this.iframeOverlay.style.top = '0';
+            this.iframeOverlay.style.left = '0';
+            this.iframeOverlay.style.width = '100%';
+            this.iframeOverlay.style.height = '100%';
+            this.iframeOverlay.style.zIndex = '9999';
+            // Transparent overlay
+            this.iframeOverlay.style.background = 'transparent';
+            this.iframeOverlay.style.cursor = 'col-resize';
+            this.iframeOverlay.style.pointerEvents = 'all';
         }
-        
-        // Position the overlay over each iframe
-        iframes.forEach(iframe => {
-            const rect = iframe.getBoundingClientRect();
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.left = rect.left + 'px';
-            overlay.style.top = rect.top + 'px';
-            overlay.style.width = rect.width + 'px';
-            overlay.style.height = rect.height + 'px';
-            overlay.style.zIndex = '9999';
-            overlay.style.background = 'transparent';
-            overlay.style.cursor = 'col-resize';
-            this.iframeOverlay.appendChild(overlay);
-        });
         
         document.body.appendChild(this.iframeOverlay);
     }
@@ -212,7 +198,6 @@ class ResizablePanels {
     removeIframeOverlay() {
         if (this.iframeOverlay && this.iframeOverlay.parentNode) {
             this.iframeOverlay.parentNode.removeChild(this.iframeOverlay);
-            this.iframeOverlay.innerHTML = ''; // Clear child overlays
         }
     }
     
