@@ -9,7 +9,7 @@
 
 **The AI-powered browser automation agent that thinks and acts like a human**
 
-[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Demo](#demo) • [Contributing](#contributing)
+[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Contributing](#contributing)
 
 </div>
 
@@ -28,13 +28,6 @@ AgentTheo is an autonomous AI agent that can browse the web, interact with websi
 - **🚀 Web UI Interface** - Modern chat interface with live browser view
 - **🐳 Fully Containerized** - One command to run, no complex setup
 - **⚡ Hot Reload Development** - Instant code updates without rebuilding
-
-## 🎬 Demo
-
-<div align="center">
-  <img src="docs/assets/demo.gif" alt="AgentTheo Demo" width="800">
-  <p><i>AgentTheo navigating e-commerce sites and comparing prices autonomously</i></p>
-</div>
 
 ## 🚀 Quick Start
 
