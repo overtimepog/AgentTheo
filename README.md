@@ -9,6 +9,7 @@ A containerized browser automation agent using Playwright, LangGraph, and OpenRo
 - 🤖 Natural language task execution
 - 🌐 Multi-browser support (Chromium, Firefox, WebKit)
 - 📊 Real-time visual feedback via VNC/noVNC
+- 💬 **NEW: Web UI with integrated VNC viewer and chat interface**
 - 🔧 Docker containerized environment
 - 🧠 LLM-powered decision making via OpenRouter
 - 🎯 Playwright browser automation
@@ -34,79 +35,93 @@ cp config/.env.template config/.env
 # Edit config/.env and add your OpenRouter API key
 ```
 
-### 2. First Time Setup
-
-Before running your first task, build the Docker container:
+### 2. Start AgentTheo
 
 ```bash
-# Build the container (required on first run)
-./run.sh restart
+# Start AgentTheo with Web UI
+./run.sh start
 ```
 
-This command:
-- Builds the Docker image with all dependencies
-- Installs Playwright browsers
-- Sets up the desktop environment
-- Prepares the automation framework
+This will:
+- Build the Docker image (first time only)
+- Start all services (VNC, Web UI, Agent)
+- Make the Web UI available at http://localhost:8000
 
-### 3. Run Your First Task
+### 3. Access the Web UI
 
-```bash
-# Run a browser automation task
-./run.sh task "go to google and search for AI news"
-```
+Open your browser and navigate to:
+- **http://localhost:8000**
 
-### 4. Access the Browser GUI
-
-Once the task is running, you can watch it in real-time:
-
-- **Web Interface**: Open http://localhost:6080/vnc.html in your browser
-- **VNC Client**: Connect to vnc://localhost:5901 (no password)
+The Web UI provides:
+- Live VNC view of the browser on the left
+- Chat interface on the right to send commands
+- Real-time responses from the agent
 
 ## Usage
 
-### Running Tasks
-
-The agent accepts natural language commands through the `run.sh` script:
+### Managing AgentTheo
 
 ```bash
-# Basic syntax
-./run.sh task "<your natural language command>"
+# Start AgentTheo
+./run.sh start
 
-# Examples
-./run.sh task "navigate to amazon and find the price of headphones"
-./run.sh task "fill out the contact form on example.com"
-./run.sh task "extract all product listings from the search results"
-./run.sh task "find the latest news about artificial intelligence"
-```
+# Stop AgentTheo
+./run.sh stop
 
-### Command Reference
-
-```bash
-# Run a browser automation task
-./run.sh task "<command>"
-
-# Rebuild the container (after code changes or updates)
+# Restart AgentTheo
 ./run.sh restart
 
-# View help
-./run.sh
+# Restart with rebuild
+./run.sh restart --rebuild
+
+# View logs
+./run.sh logs
+
+# Check status
+./run.sh status
 ```
+
+### Using the Web UI
+
+1. Start AgentTheo: `./run.sh start`
+2. Open http://localhost:8000 in your browser
+3. Type commands in the chat interface
+4. Watch the browser execute your commands in real-time
+
+Example commands you can send through the chat:
+- "Go to google and search for OpenAI news"
+- "Navigate to amazon and find the price of headphones"
+- "Fill out the contact form on example.com"
+- "Find the latest news about artificial intelligence from multiple sources"
+- "Extract all product listings from the search results"
 
 ### Monitoring Your Task
 
 When you run a task, the browser runs with a full desktop environment:
 
-1. **Watch in Browser**: Open http://localhost:6080/vnc.html
-2. **Connect via VNC**: Use any VNC client to connect to `localhost:5901`
-3. **View Logs**: `docker logs -f browser-agent`
-4. **Stop Task**: `docker stop browser-agent`
+1. **Use the Web UI (Recommended)**: Open http://localhost:8000
+   - Integrated VNC viewer and chat interface
+   - Send commands directly to the agent
+   - See real-time responses
+2. **Direct VNC Access**: Open http://localhost:6080/vnc.html
+3. **Connect via VNC**: Use any VNC client to connect to `localhost:5901`
+4. **View Logs**: `docker logs -f browser-agent`
+5. **Stop Task**: `docker stop browser-agent`
 
 This allows you to:
 - Watch the automation in real-time
 - Debug selector issues visually  
 - Intervene if needed
 - Record demos of your automation
+
+### Web UI Features
+
+The new web interface (http://localhost:8000) provides:
+- **Split View**: VNC display on the left, chat interface on the right
+- **Real-time Chat**: Send commands and receive responses from the agent
+- **WebSocket Communication**: Instant bidirectional communication
+- **Status Indicators**: Connection status and agent availability
+- **Responsive Design**: Works on different screen sizes
 
 ## Architecture
 

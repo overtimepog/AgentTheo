@@ -32,5 +32,18 @@ echo "  - VNC: vnc://localhost:5901 (no password)"
 echo "  - Web: http://localhost:6080/vnc.html"
 echo ""
 
+# Start the web UI in the background
+echo "Starting AgentTheo Web UI..."
+python /app/webui.py &
+WEB_UI_PID=$!
+
+# Give the web UI time to start
+sleep 2
+
+echo ""
+echo "AgentTheo Web UI ready!"
+echo "  - Access the full interface at: http://localhost:8000"
+echo ""
+
 # Run the Python application
 exec python /app/entrypoint.py

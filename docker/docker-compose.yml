@@ -8,7 +8,6 @@ services:
     env_file:
       - ../config/.env
     environment:
-      - TASK_DESCRIPTION=${TASK_DESCRIPTION:-}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - BROWSER=${BROWSER:-chromium}
       - DISPLAY=:1
@@ -26,3 +25,4 @@ services:
     ports:
       - "5901:5901"  # VNC port
       - "6080:6080"  # noVNC web interface
+      - "8000:8000"  # AgentTheo Web UI

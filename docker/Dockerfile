@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     # Desktop environment components
     xvfb x11vnc fluxbox \
     novnc websockify \
+    # Process manager
+    supervisor \
     # Additional browser dependencies for GUI
     libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdbus-1-3 \
     libdrm2 libxkbcommon0 libatspi2.0-0 libx11-6 libxcomposite1 libxdamage1 \
@@ -35,7 +37,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy source code
 COPY agent/ /app/agent/
 COPY entrypoint.py /app/
+COPY webui/ /app/webui/
 COPY docker/docker-entrypoint.sh /app/
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Set environment variables for desktop mode
 ENV PYTHONUNBUFFERED=1 \
@@ -44,10 +48,14 @@ ENV PYTHONUNBUFFERED=1 \
     DISPLAY=:1 \
     DEBIAN_FRONTEND=noninteractive
 
+# Create log directory for supervisor
+RUN mkdir -p /var/log/supervisor
+
 # Create and switch to non-root user
 RUN groupadd -r agent && useradd -r -g agent agent \
     && chown -R agent:agent /app \
-    && chmod +x /app/docker-entrypoint.sh
+    && chmod +x /app/docker-entrypoint.sh \
+    && chown -R agent:agent /var/log/supervisor
 
 USER agent
 
@@ -57,5 +65,8 @@ RUN python -m playwright install chromium
 # Expose VNC and noVNC ports
 EXPOSE 5901 6080
 
-# Entrypoint
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Switch back to root for supervisor
+USER root
+
+# Use supervisor as the main process
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
