@@ -3,6 +3,10 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      args:
+        BROWSER: ${BROWSER:-chromium}
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.11}
+        NODE_VERSION: ${NODE_VERSION:-20}
     image: agenttheo:latest
     container_name: agenttheo
     env_file:

@@ -1,35 +1,42 @@
 # syntax=docker/dockerfile:1.4
 # Multi-stage optimized Dockerfile for AgentTheo with Playwright
 
+# Build arguments
+ARG PYTHON_VERSION=3.11
+ARG NODE_VERSION=20
+ARG BROWSER=chromium
+
 # Stage 1: Builder stage for dependencies
-FROM node:20-bookworm as builder
+FROM node:${NODE_VERSION}-bookworm as builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
 # Install build dependencies and Python
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip python3-venv \
+    python3.11 python3.11-venv python3-pip \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Create Python virtual environment
-RUN python3 -m venv /app/venv
+RUN python3.11 -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
-# Install Python dependencies
+# Copy and install Python dependencies with cache mount
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# Install Playwright and browsers (will be copied to final stage)
-# Set the browsers path explicitly
+# Install Playwright and specified browser only
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN npx -y playwright@1.48.0 install --with-deps chromium firefox webkit
+ARG BROWSER
+RUN npx -y playwright@1.48.0 install --with-deps ${BROWSER}
 
 # Stage 2: Runtime stage with minimal footprint
-FROM node:20-bookworm-slim
+FROM node:${NODE_VERSION}-bookworm-slim
 
+ARG PYTHON_VERSION=3.11
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
@@ -40,12 +47,14 @@ RUN groupadd -r agent && useradd -r -g agent -m agent && \
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-venv \
+    python${PYTHON_VERSION} python${PYTHON_VERSION}-venv \
     # Desktop environment components
     xvfb x11vnc fluxbox \
     novnc websockify \
     # Process manager
     supervisor \
+    # Healthcheck
+    curl \
     # Browser runtime dependencies (minimal set)
     libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdbus-1-3 \
     libdrm2 libxkbcommon0 libatspi2.0-0 libx11-6 libxcomposite1 libxdamage1 \
@@ -78,7 +87,11 @@ ENV PYTHONUNBUFFERED=1 \
     DISPLAY=:1
 
 # Expose VNC and noVNC ports
-EXPOSE 5901 6080
+EXPOSE 5901 6080 8000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Use supervisor as the main process
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

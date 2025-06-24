@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+.env
+.venv
+env/
+ENV/
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Logs
+logs/
+*.log
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Other
+.DS_Store
+Thumbs.db
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Project specific
+tests/
+examples/
+scripts/
+utility-scripts/
+.taskmaster/
+.claude/
+.clinerules/
+.cursor/
+.roo/
+.trae/
+.windsurf/
