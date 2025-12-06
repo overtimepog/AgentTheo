@@ -7,11 +7,13 @@ streaming responses, and Claude Code-style presentation.
 
 import os
 import json
+import uuid
 from datetime import datetime
 from typing import Any
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import AIMessage, ToolMessage, HumanMessage, AIMessageChunk
+from langgraph.checkpoint.memory import InMemorySaver
 from pydantic import SecretStr
 
 from rich.console import Console, Group
@@ -173,11 +175,20 @@ def create_assistant_panel(content: str) -> Panel:
 
 
 # =============================================================================
-# Agent Setup
+# Agent Setup & Session Management
 # =============================================================================
 
+# Global checkpointer for conversation persistence
+_checkpointer = InMemorySaver()
+
+
+def generate_thread_id() -> str:
+    """Generate a unique thread ID for a new conversation session."""
+    return str(uuid.uuid4())
+
+
 def create_agent():
-    """Create and configure the DeepAgent with all registered tools."""
+    """Create and configure the DeepAgent with all registered tools and memory."""
     api_key = os.getenv("THEO_OPENROUTER_API_KEY")
     model_name = os.getenv("THEO_OPENROUTER_MODEL", "anthropic/claude-sonnet-4-20250514")
 
@@ -200,8 +211,9 @@ Be concise but thorough in your responses."""
         model=model,
         system_prompt=system_prompt,
         tools=get_registered_tools(),
+        checkpointer=_checkpointer,
     )
-    
+
     return agent, model_name
 
 
@@ -209,17 +221,26 @@ Be concise but thorough in your responses."""
 # Streaming Chat with Rich TUI
 # =============================================================================
 
-def stream_chat_rich(agent, message: str):
-    """Stream a response with rich TUI displaying tool calls."""
+def stream_chat_rich(agent, message: str, thread_id: str):
+    """Stream a response with rich TUI displaying tool calls.
+
+    Args:
+        agent: The DeepAgent instance
+        message: User's message
+        thread_id: Unique thread ID for conversation persistence
+    """
     collected_text = ""
-    current_tool_calls = {}  # Track tool calls by ID
     displayed_tool_calls = set()
     displayed_tool_results = set()
-    
+
+    # Config with thread_id for memory persistence
+    config = {"configurable": {"thread_id": thread_id}}
+
     # Use multiple stream modes to capture both messages and state updates
     try:
         for chunk in agent.stream(
             {"messages": [{"role": "user", "content": message}]},
+            config=config,
             stream_mode="values",  # Get full state to see tool calls
         ):
             messages = chunk.get("messages", [])
@@ -276,28 +297,33 @@ def stream_chat_rich(agent, message: str):
         ))
 
 
-def stream_chat_rich_v2(agent, message: str):
-    """Alternative streaming with token-by-token display and tool visualization."""
+def stream_chat_rich_v2(agent, message: str, thread_id: str):
+    """Alternative streaming with token-by-token display and tool visualization.
+
+    Args:
+        agent: The DeepAgent instance
+        message: User's message
+        thread_id: Unique thread ID for conversation persistence
+    """
     response_text = ""
     tool_calls_shown = set()
     tool_results_shown = set()
-    
+
+    # Config with thread_id for memory persistence
+    config = {"configurable": {"thread_id": thread_id}}
+
     console.print()
-    
+
     # Start with a thinking indicator
     with console.status("[bold yellow]Thinking...", spinner="dots"):
-        # Collect first chunk to see if we're doing tool calls
-        first_chunk = None
-        stream = agent.stream(
-            {"messages": [{"role": "user", "content": message}]},
-            stream_mode="messages",
-        )
-        
+        pass  # Brief pause for visual effect
+
     # Now stream the response
     console.print(Text("🤖 ", style="bold bright_green"), end="")
-    
+
     for chunk in agent.stream(
         {"messages": [{"role": "user", "content": message}]},
+        config=config,
         stream_mode="messages",
     ):
         msg, metadata = chunk
@@ -351,11 +377,11 @@ def stream_chat_rich_v2(agent, message: str):
 # =============================================================================
 
 def run_chat_loop():
-    """Run the main chat loop with Rich TUI."""
+    """Run the main chat loop with Rich TUI and persistent memory."""
     console.clear()
     console.print(create_header())
     console.print()
-    
+
     try:
         agent, model_name = create_agent()
         tools_list = get_registered_tools()
@@ -366,14 +392,18 @@ def run_chat_loop():
             border_style="red"
         ))
         return
-    
+
+    # Generate a unique thread ID for this session
+    thread_id = generate_thread_id()
+
     # Show startup info
     info_grid = Table.grid(padding=(0, 2))
     info_grid.add_column(style="dim")
     info_grid.add_column(style="bright_white")
     info_grid.add_row("Model:", model_name)
     info_grid.add_row("Tools:", ", ".join([t.name for t in tools_list]))
-    
+    info_grid.add_row("Session:", thread_id[:8] + "...")
+
     console.print(Panel(
         info_grid,
         title="[bold]Configuration[/]",
@@ -381,33 +411,38 @@ def run_chat_loop():
         box=ROUNDED
     ))
     console.print()
-    console.print(Text("Type 'quit' to exit, 'clear' to clear screen", style="dim"))
+    console.print(Text("Type 'quit' to exit, 'clear' to clear screen, 'new' for new session", style="dim"))
     console.print(Rule(style="dim"))
-    
+
     while True:
         try:
             console.print()
             user_input = console.input("[bold bright_cyan]You:[/] ").strip()
-            
+
             if not user_input:
                 continue
-            
+
             if user_input.lower() in ("quit", "exit", "q"):
                 console.print(Panel("👋 Goodbye!", border_style="bright_blue"))
                 break
-            
+
             if user_input.lower() == "clear":
                 console.clear()
                 console.print(create_header())
                 continue
-            
-            # Display user message in a panel for consistency
-            # (Optional: comment out if you prefer inline display)
-            # console.print(create_user_message_panel(user_input))
-            
-            # Stream the response with tool visualization
-            stream_chat_rich(agent, user_input)
-            
+
+            if user_input.lower() == "new":
+                # Start a new conversation session
+                thread_id = generate_thread_id()
+                console.print(Panel(
+                    Text(f"Started new session: {thread_id[:8]}...", style="bright_green"),
+                    border_style="green"
+                ))
+                continue
+
+            # Stream the response with tool visualization and memory
+            stream_chat_rich(agent, user_input, thread_id)
+
             console.print(Rule(style="dim"))
             
         except KeyboardInterrupt:
