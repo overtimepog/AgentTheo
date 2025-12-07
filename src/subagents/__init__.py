@@ -39,26 +39,42 @@ Key concepts:
 """
 
 import importlib
-import pkgutil
 from pathlib import Path
 
 
 def discover_subagents() -> None:
     """
-    Automatically import all Python modules in the subagents directory.
+    Automatically import all Python modules in the subagents directory and subdirectories.
 
     This triggers the theo_subagent() calls for each subagent definition,
     registering them in the global subagent registry.
+
+    Supports nested directories like:
+        - src/subagents/my_agent.py -> src.subagents.my_agent
+        - src/subagents/research/deep_agent.py -> src.subagents.research.deep_agent
     """
     package_dir = Path(__file__).parent
 
-    for module_info in pkgutil.iter_modules([str(package_dir)]):
-        if module_info.name.startswith("_"):
-            # Skip private modules like __init__
+    # Find all .py files recursively
+    for py_file in package_dir.rglob("*.py"):
+        # Skip private modules (starting with _)
+        if py_file.name.startswith("_"):
             continue
 
+        # Convert file path to module path
+        # e.g., /path/to/src/subagents/research/deep_agent.py -> src.subagents.research.deep_agent
+        relative_path = py_file.relative_to(package_dir.parent.parent)
+        module_path = str(relative_path.with_suffix("")).replace("/", ".").replace("\\", ".")
+
         # Import the module, which triggers theo_subagent() calls
-        importlib.import_module(f"src.subagents.{module_info.name}")
+        try:
+            importlib.import_module(module_path)
+        except Exception as e:
+            # Log but don't fail on individual module import errors
+            import logging
+            logging.getLogger(__name__).warning(
+                f"Failed to import subagent module '{module_path}': {e}"
+            )
 
 
 # Auto-discover subagents when this package is imported
