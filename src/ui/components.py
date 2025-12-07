@@ -30,6 +30,8 @@ STYLES = {
     "info": Style(color="bright_white", dim=True),
     "success": Style(color="bright_green", bold=True),
     "thinking": Style(color="bright_yellow", italic=True),
+    "subagent": Style(color="bright_magenta", bold=True),
+    "subagent_task": Style(color="white", italic=True),
 }
 
 
@@ -139,6 +141,98 @@ def create_assistant_panel(content: str) -> Panel:
         title=Text("🤖 Assistant", style="bold bright_green"),
         title_align="left",
         border_style="bright_green",
+        box=ROUNDED,
+        padding=(0, 1),
+    )
+
+
+def create_subagent_call_panel(subagent_name: str, task: str, status: str = "running") -> Panel:
+    """Create a styled panel for subagent delegation calls.
+
+    Shows the subagent being invoked and the task being delegated.
+    """
+    icons = {
+        "running": "🤖",
+        "success": "✅",
+        "error": "❌",
+    }
+    icon = icons.get(status, "🤖")
+
+    # Header with subagent name
+    header = Text()
+    header.append(f"{icon} Delegating to ", style="dim")
+    header.append(subagent_name, style=STYLES["subagent"])
+
+    # Task content
+    task_content = Table.grid(padding=(0, 1))
+    task_content.add_column()
+
+    task_text = Text()
+    task_text.append("Task: ", style="dim bold")
+    task_text.append(task, style=STYLES["subagent_task"])
+    task_content.add_row(task_text)
+
+    if status == "running":
+        task_content.add_row(Text("⏳ Working...", style="dim italic"))
+
+    border_style = {
+        "running": "bright_magenta",
+        "success": "bright_green",
+        "error": "bright_red",
+    }.get(status, "bright_magenta")
+
+    return Panel(
+        task_content,
+        title=header,
+        title_align="left",
+        border_style=border_style,
+        box=ROUNDED,
+        padding=(0, 1),
+    )
+
+
+def create_subagent_result_panel(
+    subagent_name: str,
+    result: str,
+    is_error: bool = False
+) -> Panel:
+    """Create a panel for subagent results with nested styling.
+
+    Shows the subagent's response in a distinctive nested format.
+    """
+    icon = "❌" if is_error else "✅"
+
+    header = Text()
+    header.append(f"{icon} ", style="bold")
+    header.append(subagent_name, style=STYLES["subagent"])
+    header.append(" completed", style="dim")
+
+    # Truncate long results
+    display_result = result
+    if len(result) > 2000:
+        display_result = result[:2000] + "\n... (truncated)"
+
+    # Try to render as markdown for nice formatting
+    try:
+        content = Markdown(display_result, code_theme="monokai")
+    except Exception:
+        content = Text(display_result, style="white")
+
+    # Wrap in a nested panel to show it's from the subagent
+    inner_panel = Panel(
+        content,
+        title=Text("📋 Response", style="dim"),
+        title_align="left",
+        border_style="dim magenta",
+        box=ROUNDED,
+        padding=(0, 1),
+    )
+
+    return Panel(
+        inner_panel,
+        title=header,
+        title_align="left",
+        border_style="bright_green" if not is_error else "bright_red",
         box=ROUNDED,
         padding=(0, 1),
     )

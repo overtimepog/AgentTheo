@@ -9,6 +9,8 @@ from src.ui.components import (
     create_tool_call_panel,
     create_tool_result_panel,
     create_user_message_panel,
+    create_subagent_call_panel,
+    create_subagent_result_panel,
 )
 from src.ui.streaming import stream_chat_rich
 
@@ -21,5 +23,7 @@ __all__ = [
     "create_tool_call_panel",
     "create_tool_result_panel",
     "create_user_message_panel",
+    "create_subagent_call_panel",
+    "create_subagent_result_panel",
     "stream_chat_rich",
 ]

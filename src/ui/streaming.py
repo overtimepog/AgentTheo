@@ -17,7 +17,12 @@ from src.ui import (
     create_assistant_panel,
     create_tool_call_panel,
     create_tool_result_panel,
+    create_subagent_call_panel,
+    create_subagent_result_panel,
 )
+
+# The Deep Agents library uses "task" as the tool name for subagent invocation
+SUBAGENT_TOOL_NAME = "task"
 
 
 def _get_memory_context(message: str, memory_getter: Optional[Callable]):
@@ -58,6 +63,8 @@ def stream_chat_rich(
         collected_text = ""
         displayed_tool_calls = set()
         displayed_tool_results = set()
+        # Track subagent calls by their tool_call_id -> subagent_name
+        subagent_calls: dict[str, str] = {}
 
         try:
             for chunk in agent.stream(
@@ -77,7 +84,17 @@ def stream_chat_rich(
                                     tool_name = tool_call.get("name", "unknown")
                                     tool_args = tool_call.get("args", {})
                                     console.print()
-                                    console.print(create_tool_call_panel(tool_name, tool_args, status="running"))
+
+                                    # Check if this is a subagent call
+                                    if tool_name == SUBAGENT_TOOL_NAME:
+                                        subagent_name = tool_args.get("name", "subagent")
+                                        task_desc = tool_args.get("task", str(tool_args))
+                                        subagent_calls[str(tc_id)] = subagent_name
+                                        console.print(create_subagent_call_panel(
+                                            subagent_name, task_desc, status="running"
+                                        ))
+                                    else:
+                                        console.print(create_tool_call_panel(tool_name, tool_args, status="running"))
 
                         if msg.content and isinstance(msg.content, str):
                             if msg.content != collected_text:
@@ -89,9 +106,17 @@ def stream_chat_rich(
                             displayed_tool_results.add(msg_id)
                             tool_name = getattr(msg, "name", "tool")
                             is_error = getattr(msg, "status", "") == "error"
-                            console.print(
-                                create_tool_result_panel(tool_name, str(msg.content)[:500], is_error=is_error)
-                            )
+
+                            # Check if this result is from a subagent
+                            if msg_id in subagent_calls:
+                                subagent_name = subagent_calls[msg_id]
+                                console.print(create_subagent_result_panel(
+                                    subagent_name, str(msg.content), is_error=is_error
+                                ))
+                            else:
+                                console.print(
+                                    create_tool_result_panel(tool_name, str(msg.content)[:500], is_error=is_error)
+                                )
 
             if collected_text:
                 console.print()
@@ -106,6 +131,8 @@ def stream_chat_rich(
     response_text = ""
     tool_calls_shown = set()
     tool_results_shown = set()
+    # Track subagent calls: tool_call_id -> subagent_name
+    subagent_calls: dict[str, str] = {}
 
     console.print()
 
@@ -119,7 +146,7 @@ def stream_chat_rich(
         config=config,
         stream_mode="messages",
     ):
-        msg, _metadata = chunk
+        msg, _ = chunk
         msg_type = getattr(msg, "type", None)
 
         if msg_type == "AIMessageChunk":
@@ -129,10 +156,24 @@ def stream_chat_rich(
             if tool_call_chunks:
                 for tc in tool_call_chunks:
                     tc_name = tc.get("name")
+                    tc_id = tc.get("id")
+                    tc_args = tc.get("args", {})
+
                     if tc_name and tc_name not in tool_calls_shown:
                         tool_calls_shown.add(tc_name)
                         console.print()
-                        console.print(create_tool_call_panel(tc_name, tc.get("args", {}), status="running"))
+
+                        # Check if this is a subagent call
+                        if tc_name == SUBAGENT_TOOL_NAME:
+                            subagent_name = tc_args.get("name", "subagent") if isinstance(tc_args, dict) else "subagent"
+                            task_desc = tc_args.get("task", str(tc_args)) if isinstance(tc_args, dict) else str(tc_args)
+                            if tc_id:
+                                subagent_calls[tc_id] = subagent_name
+                            console.print(create_subagent_call_panel(
+                                subagent_name, task_desc, status="running"
+                            ))
+                        else:
+                            console.print(create_tool_call_panel(tc_name, tc_args, status="running"))
 
             if isinstance(content, str) and content:
                 console.print(content, end="", style=STYLES["assistant"])
@@ -149,8 +190,20 @@ def stream_chat_rich(
             if tc_id and tc_id not in tool_results_shown:
                 tool_results_shown.add(tc_id)
                 console.print()
-                console.print(
-                    create_tool_result_panel(getattr(msg, "name", "tool"), str(getattr(msg, "content", ""))[:500])
-                )
+
+                tool_name = getattr(msg, "name", "tool")
+                content = str(getattr(msg, "content", ""))
+                is_error = getattr(msg, "status", "") == "error"
+
+                # Check if this result is from a subagent
+                if tc_id in subagent_calls:
+                    subagent_name = subagent_calls[tc_id]
+                    console.print(create_subagent_result_panel(
+                        subagent_name, content, is_error=is_error
+                    ))
+                else:
+                    console.print(
+                        create_tool_result_panel(tool_name, content[:500], is_error=is_error)
+                    )
 
     console.print()
