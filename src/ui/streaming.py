@@ -86,12 +86,27 @@ def stream_chat_rich(
                                     console.print()
 
                                     # Check if this is a subagent call
+                                    # Deep Agents uses 'subagent_type' for name and 'description' for task
                                     if tool_name == SUBAGENT_TOOL_NAME:
-                                        subagent_name = tool_args.get("name", "subagent")
-                                        task_desc = tool_args.get("task", str(tool_args))
+                                        # Parse args (may be string JSON)
+                                        parsed_args = tool_args
+                                        if isinstance(tool_args, str):
+                                            try:
+                                                import json
+                                                parsed_args = json.loads(tool_args)
+                                            except (json.JSONDecodeError, ValueError):
+                                                parsed_args = {}
+
+                                        if isinstance(parsed_args, dict):
+                                            subagent_name = parsed_args.get("subagent_type") or parsed_args.get("name") or "general-purpose"
+                                            task_desc = parsed_args.get("description") or parsed_args.get("task") or ""
+                                        else:
+                                            subagent_name = "general-purpose"
+                                            task_desc = ""
+
                                         subagent_calls[str(tc_id)] = subagent_name
                                         console.print(create_subagent_call_panel(
-                                            subagent_name, task_desc, status="running"
+                                            subagent_name, task_desc or "(delegating task...)", status="running"
                                         ))
                                     else:
                                         console.print(create_tool_call_panel(tool_name, tool_args, status="running"))
@@ -164,13 +179,28 @@ def stream_chat_rich(
                         console.print()
 
                         # Check if this is a subagent call
+                        # Deep Agents uses 'subagent_type' for name and 'description' for task
                         if tc_name == SUBAGENT_TOOL_NAME:
-                            subagent_name = tc_args.get("name", "subagent") if isinstance(tc_args, dict) else "subagent"
-                            task_desc = tc_args.get("task", str(tc_args)) if isinstance(tc_args, dict) else str(tc_args)
+                            # Args may come as string (JSON) during streaming chunks
+                            parsed_args = tc_args
+                            if isinstance(tc_args, str):
+                                try:
+                                    import json
+                                    parsed_args = json.loads(tc_args)
+                                except (json.JSONDecodeError, ValueError):
+                                    parsed_args = {}
+
+                            if isinstance(parsed_args, dict):
+                                subagent_name = parsed_args.get("subagent_type") or parsed_args.get("name") or "general-purpose"
+                                task_desc = parsed_args.get("description") or parsed_args.get("task") or ""
+                            else:
+                                subagent_name = "general-purpose"
+                                task_desc = ""
+
                             if tc_id:
                                 subagent_calls[tc_id] = subagent_name
                             console.print(create_subagent_call_panel(
-                                subagent_name, task_desc, status="running"
+                                subagent_name, task_desc or "(delegating task...)", status="running"
                             ))
                         else:
                             console.print(create_tool_call_panel(tc_name, tc_args, status="running"))
@@ -195,9 +225,15 @@ def stream_chat_rich(
                 content = str(getattr(msg, "content", ""))
                 is_error = getattr(msg, "status", "") == "error"
 
-                # Check if this result is from a subagent
-                if tc_id in subagent_calls:
-                    subagent_name = subagent_calls[tc_id]
+                # Check if this result is from a subagent (task tool)
+                if tool_name == SUBAGENT_TOOL_NAME or tc_id in subagent_calls:
+                    # Try to get better name from artifact or use stored/default
+                    subagent_name = subagent_calls.get(tc_id, "general-purpose")
+                    # If name is generic, try to extract from message artifact
+                    if subagent_name in ("subagent", "general-purpose"):
+                        artifact = getattr(msg, "artifact", None)
+                        if artifact and isinstance(artifact, dict):
+                            subagent_name = artifact.get("subagent_type", subagent_name)
                     console.print(create_subagent_result_panel(
                         subagent_name, content, is_error=is_error
                     ))
