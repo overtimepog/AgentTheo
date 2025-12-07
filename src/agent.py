@@ -88,7 +88,7 @@ For example: First call get_current_time, then use its actual result in store_me
     return agent, model_name, embedding_model
 
 
-def build_prompt_session(on_clear, on_new_session, on_toggle_stream, on_quit):
+def build_prompt_session():
     """Configure a PromptSession with key bindings for common actions."""
     kb = KeyBindings()
 
@@ -129,7 +129,7 @@ def run_chat_loop():
         return
 
     thread_id = generate_thread_id()
-    token_stream_mode = False
+    token_stream_mode = True
 
     def show_header():
         console.clear()
@@ -165,7 +165,7 @@ def run_chat_loop():
             box=ROUNDED
         ))
         console.print()
-        console.print(Text("Ctrl+Q quit | Ctrl+L clear | Ctrl+N new session | Ctrl+T toggle token stream", style="dim"))
+        console.print(Text("Ctrl+C quit | Ctrl+L clear | Ctrl+N new session | Ctrl+T toggle token stream", style="dim"))
         console.print(Text("Type 'quit', 'clear', 'new', or 'toggle' also works.", style="dim"))
         console.print(Rule(style="dim"))
 
@@ -191,7 +191,7 @@ def run_chat_loop():
     def handle_quit():
         console.print(Panel("👋 Goodbye!", border_style="bright_blue"))
 
-    session = build_prompt_session(handle_clear, handle_new_session, handle_toggle_stream, handle_quit)
+    session = build_prompt_session()
 
     while True:
         try:
