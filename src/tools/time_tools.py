@@ -4,10 +4,10 @@ Time Tools
 Provides time and date related utilities.
 """
 
-from src.registry import agent_tool
+from src.registry import theo_tool
 
 
-@agent_tool
+@theo_tool
 def get_current_time() -> str:
     """
     Get the current date and time in the local timezone.

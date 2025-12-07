@@ -4,10 +4,10 @@ Calculator Tool
 Provides mathematical expression evaluation.
 """
 
-from src.registry import agent_tool
+from src.registry import theo_tool
 
 
-@agent_tool
+@theo_tool
 def calculator(expression: str) -> str:
     """
     Evaluate a mathematical expression and return the numeric result.

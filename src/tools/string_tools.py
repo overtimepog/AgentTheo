@@ -4,10 +4,10 @@ String Tools
 Provides string manipulation utilities.
 """
 
-from src.registry import agent_tool
+from src.registry import theo_tool
 
 
-@agent_tool
+@theo_tool
 def reverse_string(text: str) -> str:
     """
     Reverse the characters in a string.

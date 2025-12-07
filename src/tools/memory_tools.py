@@ -8,13 +8,13 @@ These tools allow the agent to store, search, and manage memories.
 import json
 import logging
 
-from src.registry import agent_tool
+from src.registry import theo_tool
 from src.memory import get_memory_manager, MEMORY_TYPES, MemoryManagerError
 
 logger = logging.getLogger(__name__)
 
 
-@agent_tool
+@theo_tool
 def store_memory(
     content: str,
     memory_type: str = "general",
@@ -79,7 +79,7 @@ def store_memory(
         return f"Error: {e}"
 
 
-@agent_tool
+@theo_tool
 def search_memory(
     query: str,
     memory_type: str = "",
@@ -153,7 +153,7 @@ def search_memory(
         return f"Error searching memory: {e}"
 
 
-@agent_tool
+@theo_tool
 def forget_memory(identifier: str) -> str:
     """
     Delete a memory by ID or by searching for matching content.
@@ -200,7 +200,7 @@ def forget_memory(identifier: str) -> str:
         return f"Error deleting memory: {e}"
 
 
-@agent_tool
+@theo_tool
 def list_memories(
     memory_type: str = "",
     limit: int = 10,
@@ -276,7 +276,7 @@ def list_memories(
         return f"Error listing memories: {e}"
 
 
-@agent_tool
+@theo_tool
 def memory_stats() -> str:
     """
     Get statistics about the memory system.

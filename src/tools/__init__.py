@@ -2,14 +2,14 @@
 Tools Package
 
 This package automatically discovers and loads all tools from Python files
-in this directory. Simply create a new .py file with @agent_tool decorated
+in this directory. Simply create a new .py file with @theo_tool decorated
 functions and they will be automatically registered.
 
 Example:
     # src/tools/my_tools.py
-    from src.registry import agent_tool
+    from src.registry import theo_tool
     
-    @agent_tool
+    @theo_tool
     def my_custom_tool(param: str) -> str:
         '''Description of what the tool does.'''
         return "result"
@@ -24,7 +24,7 @@ def discover_tools() -> None:
     """
     Automatically import all Python modules in the tools directory.
     
-    This triggers the @agent_tool decorator for each tool function,
+    This triggers the @theo_tool decorator for each tool function,
     registering them in the global tool registry.
     """
     package_dir = Path(__file__).parent
@@ -34,7 +34,7 @@ def discover_tools() -> None:
             # Skip private modules like __init__
             continue
         
-        # Import the module, which triggers @agent_tool decorators
+        # Import the module, which triggers @theo_tool decorators
         importlib.import_module(f"src.tools.{module_info.name}")
 
 

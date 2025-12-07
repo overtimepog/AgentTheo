@@ -6,11 +6,11 @@ Tools are automatically discovered from the src/tools/ directory.
 
 To add new tools:
     1. Create a new .py file in src/tools/
-    2. Import and use the @agent_tool decorator:
+    2. Import and use the @theo_tool decorator:
     
-        from src.registry import agent_tool
+        from src.registry import theo_tool
         
-        @agent_tool
+        @theo_tool
         def my_tool(param: str) -> str:
             '''Tool description goes here.'''
             return "result"
