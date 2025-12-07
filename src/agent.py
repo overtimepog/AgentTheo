@@ -22,7 +22,8 @@ from rich.rule import Rule
 
 from deepagents import create_deep_agent
 from src import tools  # noqa: F401
-from src.registry import get_registered_tools
+from src import subagents  # noqa: F401 - triggers auto-discovery
+from src.registry import get_registered_tools, get_registered_subagents
 from src.memory import get_memory_manager, get_memory_config
 from src.ui import STYLES, console, create_header, stream_chat_rich
 
@@ -54,7 +55,7 @@ def generate_thread_id() -> str:
 
 
 def create_agent():
-    """Create and configure the DeepAgent with all registered tools and memory."""
+    """Create and configure the DeepAgent with all registered tools, subagents, and memory."""
     api_key = os.getenv("THEO_OPENROUTER_API_KEY")
     model_name = os.getenv("THEO_OPENROUTER_MODEL", "anthropic/claude-sonnet-4-20250514")
     embedding_model = os.getenv("THEO_OPENROUTER_EMBEDDING_MODEL", "openai/text-embedding-3-large")
@@ -70,22 +71,45 @@ def create_agent():
         streaming=True,
     )
 
-    system_prompt = """You are a helpful AI assistant with access to various tools.
+    # Get registered tools and subagents
+    tools_list = get_registered_tools()
+    subagents_list = get_registered_subagents()
+
+    system_prompt = """You are a helpful AI assistant with access to various tools and subagents.
 Use your planning capabilities to break down complex tasks into manageable steps.
 When you learn something important about the user or task, consider storing it in memory.
 Be concise but thorough in your responses.
 
+SUBAGENTS: You have specialized subagents that can handle delegated tasks. Use the task()
+tool to invoke them when appropriate:
+    task(name="subagent-name", task="Description of what you need done")
+
+Delegate to subagents when:
+- A task requires deep analysis or specialized processing
+- You want to isolate complex work to avoid context bloat
+- A subagent's description matches / works with the task at hand
+
+Delegate to the general-purpose subagent all the time, even allowing it to call other subagents as needed.
+
 IMPORTANT: When you need to use multiple tools where one depends on another's output,
 call the first tool, wait for its result, then call the dependent tool with the actual value.
-For example: First call get_current_time, then use its actual result in store_memory."""
+For example: First call get_current_time, then use its actual result in store_memory.
+"""
 
-    agent = create_deep_agent(
-        model=model,
-        system_prompt=system_prompt,
-        tools=get_registered_tools(),
-        checkpointer=_checkpointer
-    )
-    return agent, model_name, embedding_model
+    # Build agent with tools and subagents
+    agent_kwargs = {
+        "model": model,
+        "system_prompt": system_prompt,
+        "tools": tools_list,
+        "checkpointer": _checkpointer,
+    }
+
+    # Add subagents if any are registered
+    if subagents_list:
+        agent_kwargs["subagents"] = subagents_list
+
+    agent = create_deep_agent(**agent_kwargs)
+    return agent, model_name, embedding_model, tools_list, subagents_list
 
 
 def build_prompt_session():
@@ -118,8 +142,7 @@ def build_prompt_session():
 def run_chat_loop():
     """Run the main chat loop with Rich TUI and persistent memory."""
     try:
-        agent, model_name, embedding_model = create_agent()
-        tools_list = get_registered_tools()
+        agent, model_name, embedding_model, tools_list, subagents_list = create_agent()
     except Exception as e:
         console.print(Panel(
             Text(f"Failed to initialize: {e}", style=STYLES["error"]),
@@ -154,6 +177,8 @@ def run_chat_loop():
         info_grid.add_row("Agent Model:", model_name)
         info_grid.add_row("Embedding Model:", embedding_model)
         info_grid.add_row("Tools:", ", ".join([t.name for t in tools_list]))
+        if subagents_list:
+            info_grid.add_row("Subagents:", ", ".join([s["name"] for s in subagents_list]))
         info_grid.add_row("Memory:", memory_status)
         info_grid.add_row("Session:", thread_id[:8] + "...")
         info_grid.add_row("Token Stream:", "On" if token_stream_mode else "Off")
