@@ -61,10 +61,12 @@ def stream_chat_rich(
 
     if not token_stream:
         collected_text = ""
-        displayed_tool_calls = set()
-        displayed_tool_results = set()
+        displayed_tool_calls: set[str] = set()
+        displayed_tool_results: set[str] = set()
         # Track subagent calls by their tool_call_id -> subagent_name
         subagent_calls: dict[str, str] = {}
+        # Track the count of messages we've processed to only look at new ones
+        last_msg_count = 0
 
         try:
             for chunk in agent.stream(
@@ -74,64 +76,71 @@ def stream_chat_rich(
             ):
                 messages = chunk.get("messages", [])
 
-                for msg in messages:
+                # Only process NEW messages (stream_mode="values" gives cumulative messages)
+                new_messages = messages[last_msg_count:]
+                last_msg_count = len(messages)
+
+                for msg in new_messages:
                     if isinstance(msg, AIMessage):
                         if hasattr(msg, "tool_calls") and msg.tool_calls:
                             for tool_call in msg.tool_calls:
-                                tc_id = tool_call.get("id", id(tool_call))
-                                if tc_id not in displayed_tool_calls:
-                                    displayed_tool_calls.add(tc_id)
-                                    tool_name = tool_call.get("name", "unknown")
-                                    tool_args = tool_call.get("args", {})
-                                    console.print()
+                                tc_id = str(tool_call.get("id", ""))
+                                if not tc_id or tc_id in displayed_tool_calls:
+                                    continue
+                                displayed_tool_calls.add(tc_id)
+                                tool_name = tool_call.get("name", "unknown")
+                                tool_args = tool_call.get("args", {})
+                                console.print()
 
-                                    # Check if this is a subagent call
-                                    # Deep Agents uses 'subagent_type' for name and 'description' for task
-                                    if tool_name == SUBAGENT_TOOL_NAME:
-                                        # Parse args (may be string JSON)
-                                        parsed_args = tool_args
-                                        if isinstance(tool_args, str):
-                                            try:
-                                                import json
-                                                parsed_args = json.loads(tool_args)
-                                            except (json.JSONDecodeError, ValueError):
-                                                parsed_args = {}
+                                # Check if this is a subagent call
+                                # Deep Agents uses 'subagent_type' for name and 'description' for task
+                                if tool_name == SUBAGENT_TOOL_NAME:
+                                    # Parse args (may be string JSON)
+                                    parsed_args = tool_args
+                                    if isinstance(tool_args, str):
+                                        try:
+                                            import json
+                                            parsed_args = json.loads(tool_args)
+                                        except (json.JSONDecodeError, ValueError):
+                                            parsed_args = {}
 
-                                        if isinstance(parsed_args, dict):
-                                            subagent_name = parsed_args.get("subagent_type") or parsed_args.get("name") or "general-purpose"
-                                            task_desc = parsed_args.get("description") or parsed_args.get("task") or ""
-                                        else:
-                                            subagent_name = "general-purpose"
-                                            task_desc = ""
-
-                                        subagent_calls[str(tc_id)] = subagent_name
-                                        console.print(create_subagent_call_panel(
-                                            subagent_name, task_desc or "(delegating task...)", status="running"
-                                        ))
+                                    if isinstance(parsed_args, dict):
+                                        subagent_name = parsed_args.get("subagent_type") or parsed_args.get("name") or "general-purpose"
+                                        task_desc = parsed_args.get("description") or parsed_args.get("task") or ""
                                     else:
-                                        console.print(create_tool_call_panel(tool_name, tool_args, status="running"))
+                                        subagent_name = "general-purpose"
+                                        task_desc = ""
+
+                                    subagent_calls[tc_id] = subagent_name
+                                    console.print(create_subagent_call_panel(
+                                        subagent_name, task_desc or "(delegating task...)", status="running"
+                                    ))
+                                else:
+                                    console.print(create_tool_call_panel(tool_name, tool_args, status="running"))
 
                         if msg.content and isinstance(msg.content, str):
                             if msg.content != collected_text:
                                 collected_text = msg.content
 
                     elif isinstance(msg, ToolMessage):
-                        msg_id = getattr(msg, "tool_call_id", id(msg))
-                        if msg_id not in displayed_tool_results:
-                            displayed_tool_results.add(msg_id)
-                            tool_name = getattr(msg, "name", "tool")
-                            is_error = getattr(msg, "status", "") == "error"
+                        # Use tool_call_id for deduplication - skip if missing or already shown
+                        tc_id = str(getattr(msg, "tool_call_id", ""))
+                        if not tc_id or tc_id in displayed_tool_results:
+                            continue
+                        displayed_tool_results.add(tc_id)
+                        tool_name = getattr(msg, "name", "tool")
+                        is_error = getattr(msg, "status", "") == "error"
 
-                            # Check if this result is from a subagent
-                            if msg_id in subagent_calls:
-                                subagent_name = subagent_calls[msg_id]
-                                console.print(create_subagent_result_panel(
-                                    subagent_name, str(msg.content), is_error=is_error
-                                ))
-                            else:
-                                console.print(
-                                    create_tool_result_panel(tool_name, str(msg.content)[:500], is_error=is_error)
-                                )
+                        # Check if this result is from a subagent
+                        if tc_id in subagent_calls:
+                            subagent_name = subagent_calls[tc_id]
+                            console.print(create_subagent_result_panel(
+                                subagent_name, str(msg.content), is_error=is_error
+                            ))
+                        else:
+                            console.print(
+                                create_tool_result_panel(tool_name, str(msg.content)[:500], is_error=is_error)
+                            )
 
             if collected_text:
                 console.print()
@@ -144,8 +153,8 @@ def stream_chat_rich(
 
     # token_stream=True path
     response_text = ""
-    tool_calls_shown = set()
-    tool_results_shown = set()
+    tool_calls_shown: set[str] = set()  # Track by tool_call_id
+    tool_results_shown: set[str] = set()  # Track by tool_call_id
     # Track subagent calls: tool_call_id -> subagent_name
     subagent_calls: dict[str, str] = {}
 
@@ -171,39 +180,42 @@ def stream_chat_rich(
             if tool_call_chunks:
                 for tc in tool_call_chunks:
                     tc_name = tc.get("name")
-                    tc_id = tc.get("id")
+                    tc_id = str(tc.get("id", ""))
                     tc_args = tc.get("args", {})
 
-                    if tc_name and tc_name not in tool_calls_shown:
-                        tool_calls_shown.add(tc_name)
-                        console.print()
+                    # Skip if no id or already shown (dedupe by id, not name)
+                    if not tc_id or tc_id in tool_calls_shown:
+                        continue
+                    if not tc_name:
+                        continue
+                    tool_calls_shown.add(tc_id)
+                    console.print()
 
-                        # Check if this is a subagent call
-                        # Deep Agents uses 'subagent_type' for name and 'description' for task
-                        if tc_name == SUBAGENT_TOOL_NAME:
-                            # Args may come as string (JSON) during streaming chunks
-                            parsed_args = tc_args
-                            if isinstance(tc_args, str):
-                                try:
-                                    import json
-                                    parsed_args = json.loads(tc_args)
-                                except (json.JSONDecodeError, ValueError):
-                                    parsed_args = {}
+                    # Check if this is a subagent call
+                    # Deep Agents uses 'subagent_type' for name and 'description' for task
+                    if tc_name == SUBAGENT_TOOL_NAME:
+                        # Args may come as string (JSON) during streaming chunks
+                        parsed_args = tc_args
+                        if isinstance(tc_args, str):
+                            try:
+                                import json
+                                parsed_args = json.loads(tc_args)
+                            except (json.JSONDecodeError, ValueError):
+                                parsed_args = {}
 
-                            if isinstance(parsed_args, dict):
-                                subagent_name = parsed_args.get("subagent_type") or parsed_args.get("name") or "general-purpose"
-                                task_desc = parsed_args.get("description") or parsed_args.get("task") or ""
-                            else:
-                                subagent_name = "general-purpose"
-                                task_desc = ""
-
-                            if tc_id:
-                                subagent_calls[tc_id] = subagent_name
-                            console.print(create_subagent_call_panel(
-                                subagent_name, task_desc or "(delegating task...)", status="running"
-                            ))
+                        if isinstance(parsed_args, dict):
+                            subagent_name = parsed_args.get("subagent_type") or parsed_args.get("name") or "general-purpose"
+                            task_desc = parsed_args.get("description") or parsed_args.get("task") or ""
                         else:
-                            console.print(create_tool_call_panel(tc_name, tc_args, status="running"))
+                            subagent_name = "general-purpose"
+                            task_desc = ""
+
+                        subagent_calls[tc_id] = subagent_name
+                        console.print(create_subagent_call_panel(
+                            subagent_name, task_desc or "(delegating task...)", status="running"
+                        ))
+                    else:
+                        console.print(create_tool_call_panel(tc_name, tc_args, status="running"))
 
             if isinstance(content, str) and content:
                 console.print(content, end="", style=STYLES["assistant"])
@@ -216,30 +228,32 @@ def stream_chat_rich(
                         response_text += text
 
         elif msg_type == "ToolMessage" or hasattr(msg, "tool_call_id"):
-            tc_id = getattr(msg, "tool_call_id", None)
-            if tc_id and tc_id not in tool_results_shown:
-                tool_results_shown.add(tc_id)
-                console.print()
+            tc_id = str(getattr(msg, "tool_call_id", ""))
+            # Skip if no id or already shown
+            if not tc_id or tc_id in tool_results_shown:
+                continue
+            tool_results_shown.add(tc_id)
+            console.print()
 
-                tool_name = getattr(msg, "name", "tool")
-                content = str(getattr(msg, "content", ""))
-                is_error = getattr(msg, "status", "") == "error"
+            tool_name = getattr(msg, "name", "tool")
+            content = str(getattr(msg, "content", ""))
+            is_error = getattr(msg, "status", "") == "error"
 
-                # Check if this result is from a subagent (task tool)
-                if tool_name == SUBAGENT_TOOL_NAME or tc_id in subagent_calls:
-                    # Try to get better name from artifact or use stored/default
-                    subagent_name = subagent_calls.get(tc_id, "general-purpose")
-                    # If name is generic, try to extract from message artifact
-                    if subagent_name in ("subagent", "general-purpose"):
-                        artifact = getattr(msg, "artifact", None)
-                        if artifact and isinstance(artifact, dict):
-                            subagent_name = artifact.get("subagent_type", subagent_name)
-                    console.print(create_subagent_result_panel(
-                        subagent_name, content, is_error=is_error
-                    ))
-                else:
-                    console.print(
-                        create_tool_result_panel(tool_name, content[:500], is_error=is_error)
-                    )
+            # Check if this result is from a subagent (task tool)
+            if tool_name == SUBAGENT_TOOL_NAME or tc_id in subagent_calls:
+                # Try to get better name from artifact or use stored/default
+                subagent_name = subagent_calls.get(tc_id, "general-purpose")
+                # If name is generic, try to extract from message artifact
+                if subagent_name in ("subagent", "general-purpose"):
+                    artifact = getattr(msg, "artifact", None)
+                    if artifact and isinstance(artifact, dict):
+                        subagent_name = artifact.get("subagent_type", subagent_name)
+                console.print(create_subagent_result_panel(
+                    subagent_name, content, is_error=is_error
+                ))
+            else:
+                console.print(
+                    create_tool_result_panel(tool_name, content[:500], is_error=is_error)
+                )
 
     console.print()
